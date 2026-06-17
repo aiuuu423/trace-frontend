@@ -2,12 +2,13 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>行迹 | Trace</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>行迹 | Trace V1.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/echarts@4.9.0/map/js/china.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/echarts@4.9.0/map/js/china.js"></script>
+    <script defer src="/_vercel/insights/script.js"></script>
 
     <style>
         /* 极致干净的全局设定 */
@@ -62,12 +63,6 @@
             background: rgba(255, 255, 255, 0.95); border-color: #e0e7ff; 
             box-shadow: 0 12px 24px -6px rgba(147, 197, 253, 0.25); transform: translateY(-4px); 
         }
-        
-        select { 
-            appearance: none; 
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); 
-            background-repeat: no-repeat; background-position: right 1rem center; background-size: 1em; 
-        }
 
         /* 隐藏滚动条让视觉更干净 */
         ::-webkit-scrollbar { width: 6px; }
@@ -75,7 +70,6 @@
         ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
     </style>
-    <script defer src="/_vercel/insights/script.js"></script>
 </head>
 
 <body class="antialiased tracking-wide">
@@ -87,14 +81,34 @@
     </div>
 
     <div id="auth-overlay" class="fixed inset-0 bg-slate-900/10 backdrop-blur-md z-[10000] flex items-center justify-center hidden transition-all duration-700">
-        <div class="glass-panel p-10 max-w-sm w-full text-center space-y-8 shadow-2xl border-white">
+        <div class="glass-panel p-10 max-w-sm w-full text-center space-y-6 shadow-2xl border-white mx-4">
             <div class="text-4xl opacity-80">🪐</div>
             <div class="space-y-3">
                 <h3 class="text-2xl font-serif-sc font-normal text-slate-800 tracking-widest">契入漫游舱</h3>
-                <p class="text-xs text-slate-500 leading-relaxed font-light tracking-widest">输入暗号，解锁专属记忆空域</p>
+                <p class="text-xs text-slate-500 leading-relaxed font-light tracking-widest">暗号即身份，首次登录将自动注册</p>
             </div>
-            <input type="text" id="user-code-input" placeholder="输入暗号..." class="w-full px-5 py-4 bg-white/60 border border-white/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200 text-center font-normal text-slate-700 text-sm shadow-inner transition-all">
+            <input type="text" id="user-code-input" placeholder="输入专属暗号 (账号)..." class="w-full px-5 py-4 bg-white/60 border border-white/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200 text-center font-normal text-slate-700 text-sm shadow-inner transition-all">
+            <input type="password" id="user-password-input" placeholder="输入密钥 (密码)..." class="w-full px-5 py-4 bg-white/60 border border-white/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200 text-center font-normal text-slate-700 text-sm shadow-inner transition-all mt-3">
             <button onclick="saveUserCode()" class="w-full py-4 bg-slate-800 text-white font-normal rounded-xl text-xs tracking-[0.2em] shadow-lg hover:bg-slate-700 hover:shadow-xl transition-all">开启行迹</button>
+        </div>
+    </div>
+
+    <div id="lightbox-overlay" class="fixed inset-0 bg-black/95 backdrop-blur-sm z-[11000] hidden flex flex-col items-center justify-center opacity-0 transition-opacity duration-300">
+        <button onclick="closeLightbox()" class="absolute top-6 right-8 text-white/70 hover:text-white text-4xl transition-colors">&times;</button>
+        <button onclick="changeLightbox(-1)" class="absolute left-4 md:left-12 text-white/50 hover:text-white text-5xl transition-colors">&#10094;</button>
+        <img id="lightbox-img" src="" class="max-h-[85vh] max-w-[90vw] object-contain rounded-xl shadow-2xl">
+        <button onclick="changeLightbox(1)" class="absolute right-4 md:right-12 text-white/50 hover:text-white text-5xl transition-colors">&#10095;</button>
+        <div id="lightbox-indicator" class="absolute bottom-10 text-white/80 text-sm tracking-[0.2em] font-light"></div>
+    </div>
+
+    <div id="detail-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[10500] hidden flex justify-end transition-opacity duration-300 opacity-0">
+        <div class="w-full md:w-[500px] bg-[#f8fafc] h-full shadow-2xl overflow-y-auto transform translate-x-full transition-transform duration-300" id="detail-drawer">
+            <div class="px-8 py-6 border-b border-slate-200 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-10">
+                <h3 class="text-xl font-serif-sc text-slate-800 tracking-wider" id="detail-modal-title">城市记忆</h3>
+                <button onclick="closeDetailModal()" class="text-3xl text-slate-400 hover:text-slate-800 transition-colors">&times;</button>
+            </div>
+            <div class="p-8 space-y-6" id="detail-modal-content">
+                </div>
         </div>
     </div>
 
@@ -134,7 +148,6 @@
         <div class="w-full max-w-[850px] glass-panel p-8 md:p-12 space-y-10">
             <h2 class="text-2xl font-serif-sc font-normal text-slate-800 tracking-[0.15em] border-b border-slate-200/50 pb-6">刻录新行迹</h2>
             <form class="space-y-8" id="trace-form" onsubmit="handleFormSubmit(event)">
-                
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div>
                         <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase">旅行日期 *</label>
@@ -207,7 +220,6 @@
         </div>
 
         <div class="w-full max-w-6xl mx-auto flex-1 flex flex-col items-center justify-start">
-            
             <div id="sub-view-map" class="w-full glass-panel p-8 md:p-12 flex flex-col md:flex-row gap-12 items-center justify-between relative shadow-xl">
                 <div class="w-full md:w-1/4 space-y-8 z-10 relative">
                     <div class="space-y-2">
@@ -225,6 +237,7 @@
                     </div>
                 </div>
                 <div class="w-full md:w-3/4 h-[55vh] md:h-[65vh] min-h-[400px] bg-[#0f172a] rounded-[2rem] relative border border-slate-700/30 flex items-center justify-center overflow-hidden shadow-2xl">
+                    <div class="absolute top-6 left-6 z-20 text-white/50 text-[10px] tracking-widest pointer-events-none">✨ 提示：点击高亮城市光点进入回忆</div>
                     <div id="echarts-map-container" style="width:100%; height:100%;"></div>
                 </div>
             </div>
@@ -239,12 +252,10 @@
     <section id="vault-view" class="view-section hidden relative z-10 min-h-screen pb-24">
         <div class="w-full h-64 bg-transparent relative overflow-hidden"></div>
         <div class="max-w-5xl mx-auto px-4 -mt-40 relative z-20 space-y-12">
-            
             <div class="flex flex-col items-center gap-6 px-4">
                 <div class="w-24 h-24 rounded-full border border-white glass-panel shadow-md overflow-hidden flex items-center justify-center text-4xl bg-white/60">🪐</div>
                 <h2 class="text-2xl font-serif-sc font-normal text-slate-800 tracking-[0.2em]" id="vault-user-title">Trace</h2>
             </div>
-
             <div class="grid grid-cols-2 md:grid-cols-4 gap-5 px-2">
                 <div onclick="switchVaultTab('cities')" id="tab-cities" class="vault-tab active glass-panel p-8 text-center cursor-pointer">
                     <p id="vault-city-stat" class="text-4xl font-light text-slate-800 font-serif-sc tracking-tight">0</p>
@@ -263,7 +274,6 @@
                     <p class="text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] mt-4">总计开销</p>
                 </div>
             </div>
-
             <div class="glass-panel p-10 min-h-[40vh] border border-white shadow-xl">
                 <div id="vault-content-dynamic" class="transition-opacity duration-500"></div>
             </div>
@@ -278,35 +288,22 @@
         let echartsInstance = null;
         let currentVaultTab = 'cities'; 
 
-        // 全量真实字典 (330+ 城市，绝对无漏洞)
+        // Lightbox 状态变量
+        let currentLightboxPhotos = [];
+        let currentLightboxIndex = 0;
+
         const geoProvinceCityLib = {
             "北京": {"北京市": [116.40, 39.90]}, "上海": {"上海市": [121.47, 31.23]}, "天津": {"天津市": [117.20, 39.13]}, "重庆": {"重庆市": [106.50, 29.53]},
-            "安徽": {"合肥市": [117.22, 31.82], "黄山市": [118.31, 29.71], "芜湖市": [118.37, 31.32], "安庆市": [117.06, 30.54], "蚌埠市": [117.36, 32.93], "淮南市": [117.00, 32.63], "马鞍山市": [118.49, 31.67], "淮北市": [116.79, 33.95], "铜陵市": [117.81, 30.93], "滁州市": [118.31, 32.29], "阜阳市": [115.81, 32.89], "宿州市": [116.97, 33.63], "六安市": [116.50, 31.75], "亳州市": [115.77, 33.84], "池州市": [117.49, 30.66], "宣城市": [118.75, 30.94]},
-            "四川": {"成都市": [104.06, 30.65], "绵阳市": [104.73, 31.48], "乐山市": [103.76, 29.58], "宜宾市": [104.62, 28.77], "自贡市": [104.77, 29.33], "攀枝花市": [101.71, 26.58], "泸州市": [104.87, 28.89], "德阳市": [104.39, 31.12], "广元市": [105.84, 32.43], "遂宁市": [105.59, 30.53], "内江市": [105.05, 29.58], "南充市": [106.11, 30.83], "眉山市": [103.84, 30.05], "广安市": [106.63, 30.45], "达州市": [107.46, 31.21], "雅安市": [103.04, 29.98], "巴中市": [106.75, 31.85], "资阳市": [104.62, 30.15], "阿坝州": [102.22, 31.89], "甘孜州": [101.96, 30.04], "凉山州": [102.26, 27.88]},
-            "云南": {"昆明市": [102.71, 25.04], "丽江市": [100.23, 26.88], "大理州": [100.22, 25.59], "西双版纳": [100.79, 22.01], "曲靖市": [103.79, 25.49], "玉溪市": [102.54, 24.35], "保山市": [99.16, 25.11], "昭通市": [103.71, 27.33], "普洱市": [100.97, 22.77], "临沧市": [100.08, 23.88], "楚雄州": [101.52, 25.03], "红河州": [103.38, 23.36], "文山州": [104.06, 23.36], "德宏州": [98.58, 24.43], "怒江州": [98.85, 25.85], "迪庆州": [99.70, 27.82]},
-            "江苏": {"南京市": [118.79, 32.06], "苏州市": [120.62, 31.32], "无锡市": [120.31, 31.49], "连云港市": [119.17, 34.60], "徐州市": [117.18, 34.26], "常州市": [119.97, 31.77], "南通市": [120.89, 31.98], "淮安市": [119.01, 33.61], "盐城市": [120.14, 33.35], "扬州市": [119.41, 32.39], "镇江市": [119.43, 32.18], "泰州市": [119.92, 32.45], "宿迁市": [118.27, 33.96]},
-            "浙江": {"杭州市": [120.15, 30.28], "宁波市": [121.55, 29.87], "温州市": [120.65, 28.01], "嘉兴市": [120.75, 30.74], "湖州市": [120.08, 30.89], "绍兴市": [120.58, 30.03], "金华市": [119.64, 29.07], "衢州市": [118.87, 28.93], "舟山市": [122.20, 29.98], "台州市": [121.42, 28.65], "丽水市": [119.92, 28.45]},
-            "广东": {"广州市": [113.28, 23.12], "深圳市": [114.08, 22.54], "珠海市": [113.57, 22.27], "佛山市": [113.12, 23.02], "韶关市": [113.59, 24.80], "汕头市": [116.68, 23.35], "江门市": [113.08, 22.57], "湛江市": [110.36, 21.27], "茂名市": [110.92, 21.66], "肇庆市": [112.47, 23.05], "惠州市": [114.41, 23.11], "梅州市": [116.11, 24.28], "汕尾市": [115.36, 22.77], "河源市": [114.69, 23.73], "阳江市": [111.98, 21.86], "清远市": [113.05, 23.68], "东莞市": [113.74, 23.02], "中山市": [113.38, 22.52], "潮州市": [116.62, 23.65], "揭阳市": [116.35, 23.54], "云浮市": [112.04, 22.92]},
-            "湖南": {"长沙市": [113.66, 28.15], "张家界市": [110.47, 29.11], "株洲市": [113.13, 27.82], "湘潭市": [112.94, 27.82], "衡阳市": [112.57, 26.89], "邵阳市": [111.46, 27.24], "岳阳市": [113.13, 29.37], "常德市": [111.69, 29.04], "益阳市": [112.35, 28.55], "郴州市": [113.01, 25.79], "永州市": [111.60, 26.43], "怀化市": [109.99, 27.53], "娄底市": [112.00, 27.70], "湘西州": [109.73, 28.31]},
-            "湖北": {"武汉市": [114.30, 30.59], "宜昌市": [111.28, 30.69], "襄阳市": [112.12, 32.00], "黄石市": [115.03, 30.20], "十堰市": [110.78, 32.64], "鄂州市": [114.89, 30.39], "荆门市": [112.19, 31.03], "孝感市": [113.92, 30.92], "荆州市": [112.23, 30.33], "黄冈市": [114.87, 30.45], "咸宁市": [114.32, 29.83], "随州市": [113.37, 31.71], "恩施州": [109.47, 30.29]},
-            "陕西": {"西安市": [108.94, 34.34], "咸阳市": [108.70, 34.33], "延安市": [109.47, 36.58], "铜川市": [108.93, 34.90], "宝鸡市": [107.14, 34.36], "渭南市": [109.50, 34.49], "汉中市": [107.02, 33.07], "榆林市": [109.74, 38.28], "安康市": [109.02, 32.69], "商洛市": [109.93, 33.86]},
-            "福建": {"福州市": [119.29, 26.07], "厦门市": [120.38, 24.50], "泉州市": [118.68, 24.87], "莆田市": [119.00, 25.43], "三明市": [117.62, 26.26], "漳州市": [117.65, 24.51], "南平市": [118.17, 26.64], "龙岩市": [117.01, 25.07], "宁德市": [119.54, 26.65]},
-            "山东": {"济南市": [117.00, 36.65], "青岛市": [120.33, 36.07], "烟台市": [121.39, 37.52], "淄博市": [118.05, 36.81], "枣庄市": [117.32, 34.85], "东营市": [118.66, 37.43], "潍坊市": [119.11, 36.71], "济宁市": [116.58, 35.41], "泰安市": [117.08, 36.19], "威海市": [122.11, 37.51], "日照市": [119.45, 35.42], "临沂市": [118.33, 35.08], "德州市": [116.30, 37.44], "聊城市": [115.98, 36.45], "滨州市": [117.96, 37.37], "菏泽市": [115.48, 35.23]},
-            "海南": {"海口市": [110.32, 20.03], "三亚市": [109.51, 18.25], "三沙市": [112.33, 16.83], "儋州市": [109.58, 19.52], "五指山市": [109.51, 18.77], "琼海市": [110.46, 19.24]},
-            "广西": {"南宁市": [108.36, 22.81], "桂林市": [110.28, 25.27], "柳州市": [109.41, 24.31], "梧州市": [111.27, 23.47], "北海市": [109.11, 21.48], "防城港市": [108.34, 21.61], "钦州市": [108.62, 21.95], "贵港市": [109.60, 23.09], "玉林市": [110.15, 22.63], "百色市": [106.61, 23.90], "贺州市": [111.55, 24.41], "河池市": [108.06, 24.70], "来宾市": [109.22, 23.74], "崇左市": [107.36, 22.40]},
-            "新疆": {"乌鲁木齐市": [87.68, 43.77], "喀什地区": [75.98, 39.46], "克拉玛依市": [84.88, 39.77], "吐鲁番市": [89.18, 42.94], "哈密市": [93.51, 42.82], "昌吉州": [87.31, 44.01], "博尔塔拉州": [82.07, 44.90], "巴音郭楞州": [86.14, 41.76], "阿克苏地区": [80.26, 41.16], "克孜勒苏州": [76.17, 39.71], "和田地区": [79.92, 37.11], "伊犁州": [81.31, 43.92], "塔城地区": [82.98, 46.74], "阿勒泰地区": [88.13, 47.84]},
-            "西藏": {"拉萨市": [91.11, 29.65], "林芝市": [94.36, 29.64], "日喀则市": [88.88, 29.26], "昌都市": [97.17, 31.14], "山南市": [91.76, 29.23], "那曲市": [92.06, 31.47], "阿里地区": [80.10, 32.50]},
-            "黑龙江": {"哈尔滨市": [126.53, 45.80], "齐齐哈尔市": [123.91, 47.35], "鸡西市": [130.96, 45.30], "鹤岗市": [130.29, 47.33], "双鸭山市": [131.15, 46.64], "大庆市": [125.03, 46.58], "伊春市": [128.89, 47.72], "佳木斯市": [130.36, 46.80], "七台河市": [131.00, 45.77], "牡丹江市": [129.60, 44.58], "黑河市": [127.49, 50.24], "绥化市": [126.96, 46.64], "大兴安岭": [124.71, 52.33]},
-            "辽宁": {"沈阳市": [123.43, 41.80], "大连市": [121.62, 38.92], "鞍山市": [122.99, 41.11], "抚顺市": [123.95, 41.88], "本溪市": [123.76, 41.28], "丹东市": [124.36, 40.05], "锦州市": [121.12, 41.09], "营口市": [122.22, 40.66], "阜新市": [121.66, 42.01], "辽阳市": [123.17, 41.26], "盘锦市": [122.07, 41.11], "铁岭市": [123.85, 42.23], "朝阳市": [120.45, 41.57], "葫芦岛市": [120.83, 40.71]},
-            "吉林": {"长春市": [125.32, 43.81], "吉林市": [126.55, 43.83], "四平市": [124.37, 43.16], "辽源市": [125.14, 42.88], "通化市": [125.93, 41.72], "白山市": [126.42, 41.93], "松原市": [124.82, 45.14], "白城市": [122.84, 45.61], "延边州": [129.51, 42.90]},
-            "河北": {"石家庄市": [114.51, 38.04], "唐山市": [118.17, 39.63], "秦皇岛市": [119.58, 39.93], "邯郸市": [114.49, 36.60], "邢台市": [114.49, 37.05], "保定市": [115.48, 38.86], "张家口市": [114.88, 40.81], "承德市": [117.93, 40.97], "沧州市": [116.83, 38.30], "廊坊市": [116.70, 39.52], "衡水市": [115.66, 37.73]},
-            "河南": {"郑州市": [113.62, 34.74], "洛阳市": [112.45, 34.61], "开封市": [114.30, 34.79], "平顶山市": [113.29, 33.73], "安阳市": [114.35, 36.10], "鹤壁市": [114.19, 35.89], "新乡市": [113.88, 35.30], "焦作市": [113.24, 35.21], "濮阳市": [115.02, 35.76], "许昌市": [113.82, 34.02], "漯河市": [114.02, 33.58], "三门峡市": [111.19, 34.77], "南阳市": [112.52, 32.99], "商丘市": [115.65, 34.43], "信阳市": [114.08, 32.12], "周口市": [114.65, 33.62], "驻马店市": [114.02, 32.98]},
-            "山西": {"太原市": [112.53, 37.87], "大同市": [113.29, 40.08], "阳泉市": [113.58, 37.86], "长治市": [113.11, 36.19], "晋城市": [112.85, 35.49], "朔州市": [112.43, 39.33], "晋中市": [112.73, 37.68], "运城市": [111.00, 35.02], "忻州市": [112.73, 38.41], "临汾市": [111.51, 36.08], "吕梁市": [111.13, 37.52]},
-            "江西": {"南昌市": [115.89, 28.68], "景德镇市": [117.17, 29.29], "萍乡市": [113.85, 27.63], "九江市": [115.99, 29.71], "新余市": [114.93, 27.81], "鹰潭市": [117.03, 28.23], "赣州市": [114.93, 25.83], "吉安市": [114.98, 27.11], "宜春市": [114.39, 27.80], "抚州市": [116.35, 27.98], "上饶市": [117.96, 28.43]},
-            "甘肃": {"兰州市": [103.83, 36.06], "敦煌市": [94.66, 40.14], "嘉峪关市": [98.27, 39.77], "金昌市": [98.17, 38.51], "白银市": [102.16, 36.54], "天水市": [105.72, 34.58], "武威市": [102.63, 37.92], "张掖市": [100.45, 38.92], "平凉市": [106.66, 35.54], "酒泉市": [98.51, 39.74], "庆阳市": [107.64, 35.71], "定西市": [104.62, 35.58], "陇南市": [104.93, 33.39], "临夏州": [103.21, 35.60], "甘南州": [102.91, 34.98]},
-            "青海": {"西宁市": [101.77, 36.61], "海东市": [102.10, 36.50], "海北州": [100.90, 36.95], "黄南州": [102.01, 35.51], "海南州": [100.61, 36.28], "果洛州": [100.24, 34.47], "玉树州": [97.00, 33.00], "海西州": [97.37, 37.37]},
-            "宁夏": {"银川市": [106.27, 38.46], "石嘴山市": [106.38, 39.01], "吴忠市": [106.11, 37.99], "固原市": [106.24, 36.00], "中卫市": [105.18, 37.51]}, 
-            "内蒙古": {"呼和浩特市": [111.74, 40.84], "包头市": [109.84, 40.65], "乌海市": [106.82, 39.66], "赤峰市": [118.88, 42.27], "通辽市": [122.24, 43.65], "鄂尔多斯市": [109.78, 39.61], "呼伦贝尔市": [119.76, 49.21], "巴彦淖尔市": [107.38, 40.74], "乌兰察布市": [113.13, 41.02], "兴安盟": [122.05, 46.07], "锡林郭勒盟": [116.09, 43.94], "阿拉善盟": [105.70, 38.84]},
+            "四川": {"成都市": [104.06, 30.65], "绵阳市": [104.73, 31.48], "乐山市": [103.76, 29.58]},
+            "云南": {"昆明市": [102.71, 25.04], "丽江市": [100.23, 26.88], "大理州": [100.22, 25.59]},
+            "江苏": {"南京市": [118.79, 32.06], "苏州市": [120.62, 31.32], "无锡市": [120.31, 31.49]},
+            "浙江": {"杭州市": [120.15, 30.28], "宁波市": [121.55, 29.87], "温州市": [120.65, 28.01]},
+            "广东": {"广州市": [113.28, 23.12], "深圳市": [114.08, 22.54], "珠海市": [113.57, 22.27]},
+            "湖南": {"长沙市": [113.66, 28.15], "张家界市": [110.47, 29.11]},
+            "湖北": {"武汉市": [114.30, 30.59], "宜昌市": [111.28, 30.69]},
+            "陕西": {"西安市": [108.94, 34.34], "咸阳市": [108.70, 34.33]},
+            "福建": {"福州市": [119.29, 26.07], "厦门市": [120.38, 24.50]},
+            "山东": {"济南市": [117.00, 36.65], "青岛市": [120.33, 36.07]},
             "港澳台": {"香港": [114.17, 22.28], "澳门": [113.54, 22.19], "台湾": [121.50, 25.03]}
         };
 
@@ -340,6 +337,7 @@
             }
         }
 
+        // [TR-004] 登录校验增强
         function checkUserLogin() {
             const code = localStorage.getItem('trace_user_code');
             if (!code) {
@@ -351,17 +349,35 @@
             return code;
         }
 
-        function saveUserCode() {
-            const val = document.getElementById('user-code-input').value.trim();
-            if(!val) return;
-            localStorage.setItem('trace_user_code', val);
-            document.getElementById('auth-overlay').classList.add('hidden');
-            checkUserLogin();
-            loadDataFromDatabase('map');
+        // [TR-004] 新版加密登录逻辑
+        async function saveUserCode() {
+            const code = document.getElementById('user-code-input').value.trim();
+            const pwd = document.getElementById('user-password-input').value.trim();
+            if(!code || !pwd) { triggerCenteredToast("暗号与密钥不可为空"); return; }
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/login`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_code: code, password: pwd })
+                });
+                const resData = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('trace_user_code', code);
+                    document.getElementById('auth-overlay').classList.add('hidden');
+                    checkUserLogin();
+                    loadDataFromDatabase('map');
+                    triggerCenteredToast(resData.message);
+                } else {
+                    triggerCenteredToast(resData.message); // 显示密码错误
+                }
+            } catch (e) {
+                triggerCenteredToast("网络异常，请确认服务器已唤醒");
+            }
         }
 
         function clearUserCode() {
-            if(confirm("注销当前暗号？")) {
+            if(confirm("确定要退出当前暗号吗？退出后下次需重新输入密钥。")) {
                 localStorage.removeItem('trace_user_code');
                 location.reload();
             }
@@ -430,13 +446,10 @@
                     triggerCenteredToast("记忆已封存");
                     document.getElementById('trace-form').reset();
                     document.getElementById('photo-preview-box').innerHTML = '';
-                    
-                    // 彻底修复：清空照片缓存，防止串台
                     compressedPhotoB64Array = []; 
-                    
                     setTimeout(() => { switchView('dashboard-view'); }, 1200);
                 }
-            } catch (error) { alert("网络异常，请确认服务器已开机！"); }
+            } catch (error) { triggerCenteredToast("归档失败"); }
         }
 
         async function loadDataFromDatabase(mode = 'map') {
@@ -453,29 +466,24 @@
             } catch (e) { console.log(e); }
         }
 
+        // [TR-002] 时光轴点击进入详情
         function renderTimeline() {
             const container = document.getElementById('timeline-container');
             container.innerHTML = '';
             if(timelineNodesData.length === 0) return;
 
             timelineNodesData.forEach((node, index) => {
-                let photoHtml = '';
+                let coverPhotoHtml = '';
                 if(node.photo_urls && node.photo_urls.length > 0 && node.photo_urls[0] !== "") {
-                    node.currentPhotoIndex = 0; 
-                    photoHtml = `
-                    <div class="w-full overflow-hidden rounded-[2rem] mb-6 bg-white/20 flex items-center justify-center relative group h-72 md:h-[400px]">
-                        <img id="carousel-blur-${index}" src="${node.photo_urls[0]}" class="absolute inset-0 w-full h-full object-cover filter blur-[40px] opacity-50 transform scale-125">
-                        <img id="carousel-img-${index}" src="${node.photo_urls[0]}" class="relative h-full w-auto object-contain z-10 drop-shadow-2xl transition-all duration-500 rounded-xl">
-                        ${node.photo_urls.length > 1 ? `
-                        <button type="button" onclick="changePhoto(${index}, -1, event)" class="absolute left-4 z-30 w-10 h-10 rounded-full bg-white/50 backdrop-blur-md flex items-center justify-center text-sm text-slate-600 shadow-sm hover:bg-white transition-all opacity-0 group-hover:opacity-100">←</button>
-                        <button type="button" onclick="changePhoto(${index}, 1, event)" class="absolute right-4 z-30 w-10 h-10 rounded-full bg-white/50 backdrop-blur-md flex items-center justify-center text-sm text-slate-600 shadow-sm hover:bg-white transition-all opacity-0 group-hover:opacity-100">→</button>
-                        ` : ''}
-                        <span id="carousel-indicator-${index}" class="absolute right-5 bottom-5 bg-white/70 backdrop-blur-md text-slate-700 text-[10px] px-3 py-1.5 rounded-full font-medium z-20 shadow-sm tracking-[0.2em]">${1} / ${node.photo_urls.length}</span>
+                    // 只展示一张封面，提示用户点击查看全部
+                    coverPhotoHtml = `
+                    <div class="w-full h-48 md:h-64 mt-4 overflow-hidden rounded-[1.5rem] relative group">
+                        <img src="${node.photo_urls[0]}" class="w-full h-full object-cover filter group-hover:scale-105 transition-transform duration-700">
+                        <div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <span class="text-white font-serif-sc tracking-widest text-sm bg-white/20 backdrop-blur-md px-6 py-2 rounded-full border border-white/50 shadow-lg">查看详情录 (${node.photo_urls.length}张)</span>
+                        </div>
                     </div>`;
                 }
-
-                // 修复 1b：同行羁绊文字颜色在时光轴中也保持柔和统一
-                let companionHtml = node.companion ? `<span class="text-[10px] text-slate-500 font-normal tracking-widest ml-3 border-l border-slate-300 pl-3">${node.companion}</span>` : '';
 
                 const item = `
                 <div class="relative flex items-start mb-24 w-full group">
@@ -485,15 +493,16 @@
                     </div>
                     <div class="absolute left-8 md:left-[22%] w-3 h-3 rounded-full bg-white border-[2.5px] border-blue-400 transform md:-translate-x-[50%] -translate-x-[4px] mt-5 z-10 shadow-sm transition-transform duration-500 group-hover:scale-125"></div>
                     <div class="w-full pl-16 md:pl-12 md:w-[78%]">
-                        <div class="glass-panel p-8 md:p-10 rounded-[2.5rem] hover:shadow-[0_20px_40px_-15px_rgba(147,197,253,0.2)] transition-all hover:bg-white/80 duration-700">
+                        <div onclick="openNodeDetailModal(${index})" class="glass-panel p-8 md:p-10 rounded-[2.5rem] cursor-pointer hover:shadow-[0_20px_40px_-15px_rgba(147,197,253,0.2)] transition-all hover:bg-white/80 duration-500">
                             <h4 class="text-lg font-serif-sc font-normal text-slate-800 mb-3 md:hidden">${node.visit_date}</h4>
-                            <div class="flex items-center justify-between mb-8">
-                                <h4 class="text-xl font-normal font-serif-sc text-slate-800 tracking-wide flex items-center">
-                                    ${node.location_name || node.city} ${companionHtml}
+                            <div class="flex flex-col mb-4">
+                                <h4 class="text-xl font-normal font-serif-sc text-slate-800 tracking-wide mb-1">
+                                    ${node.location_name || node.city}
                                 </h4>
+                                ${node.companion ? `<span class="text-xs text-slate-500 font-normal tracking-widest block">${node.companion}</span>` : ''}
                             </div>
-                            ${photoHtml}
-                            <p class="text-[14px] leading-[2.2] text-slate-600 font-serif-sc font-light mt-6 tracking-wide">${node.diary_text || '未留下文字印记。'}</p>
+                            <p class="text-sm leading-relaxed text-slate-600 font-serif-sc font-light tracking-wide line-clamp-2">${node.diary_text || '未留下文字印记。'}</p>
+                            ${coverPhotoHtml}
                         </div>
                     </div>
                 </div>`;
@@ -501,20 +510,7 @@
             });
         }
 
-        window.changePhoto = function(nodeIndex, direction, event) {
-            if(event) event.stopPropagation();
-            const node = timelineNodesData[nodeIndex];
-            if (!node || !node.photo_urls || node.photo_urls.length <= 1) return;
-            let newIndex = node.currentPhotoIndex + direction;
-            if (newIndex < 0) newIndex = node.photo_urls.length - 1;
-            if (newIndex >= node.photo_urls.length) newIndex = 0;
-            node.currentPhotoIndex = newIndex;
-            
-            document.getElementById(`carousel-img-${nodeIndex}`).src = node.photo_urls[newIndex];
-            document.getElementById(`carousel-blur-${nodeIndex}`).src = node.photo_urls[newIndex];
-            document.getElementById(`carousel-indicator-${nodeIndex}`).innerText = `${newIndex + 1} / ${node.photo_urls.length}`;
-        };
-
+        // [TR-001] 地图点击联动
         function renderPolygonEchartsMap() {
             const uniqueCities = [...new Set(timelineNodesData.map(n => n.city))];
             const illuminatedProvinces = new Set();
@@ -551,7 +547,7 @@
 
             const option = {
                 backgroundColor: 'transparent',
-                tooltip: { trigger: 'item', formatter: '{b}' },
+                tooltip: { trigger: 'item', formatter: '{b} (点击查看记录)' }, // 增加提示
                 geo: {
                     map: 'china', roam: true, zoom: 1.2,
                     label: { emphasis: { show: false } },
@@ -564,16 +560,131 @@
                 series: [
                     {
                         name: '坐标', type: 'effectScatter', coordinateSystem: 'geo',
-                        data: scatterData, symbolSize: 10, showEffectOn: 'render',
+                        data: scatterData, symbolSize: 12, showEffectOn: 'render',
                         rippleEffect: { brushType: 'stroke', scale: 6 },
                         itemStyle: { normal: { color: '#06b6d4', shadowBlur: 15, shadowColor: '#22d3ee' } } 
                     }
                 ]
             };
             echartsInstance.setOption(option);
+            
+            // [核心联动逻辑] 绑定点击事件
+            echartsInstance.off('click'); // 防止重复绑定
+            echartsInstance.on('click', function (params) {
+                if (params.componentType === 'series') {
+                    // 点中了具体的城市光点
+                    openCityDetailModal(params.name);
+                }
+            });
+
             setTimeout(() => { echartsInstance.resize(); }, 100);
         }
 
+        // ================= 抽屉式详情与相册联动机制 =================
+        function openCityDetailModal(cityName) {
+            const filteredNodes = timelineNodesData.filter(n => n.city === cityName);
+            document.getElementById('detail-modal-title').innerText = `📍 ${cityName} 的行迹`;
+            renderNodesToDrawer(filteredNodes);
+            slideInDrawer();
+        }
+
+        function openNodeDetailModal(nodeIndex) {
+            const node = timelineNodesData[nodeIndex];
+            document.getElementById('detail-modal-title').innerText = `📅 ${node.visit_date.replace(/-/g, '.')}`;
+            renderNodesToDrawer([node]);
+            slideInDrawer();
+        }
+
+        function slideInDrawer() {
+            const modal = document.getElementById('detail-modal');
+            const drawer = document.getElementById('detail-drawer');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.replace('opacity-0', 'opacity-100');
+                drawer.classList.remove('translate-x-full');
+            }, 10);
+        }
+
+        function closeDetailModal() {
+            const modal = document.getElementById('detail-modal');
+            const drawer = document.getElementById('detail-drawer');
+            modal.classList.replace('opacity-100', 'opacity-0');
+            drawer.classList.add('translate-x-full');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function renderNodesToDrawer(nodes) {
+            const container = document.getElementById('detail-modal-content');
+            let html = '';
+            nodes.forEach(node => {
+                let photoHtml = '';
+                if (node.photo_urls && node.photo_urls.length > 0 && node.photo_urls[0] !== '') {
+                    photoHtml = `<div class="grid grid-cols-3 gap-3 mt-5">`;
+                    node.photo_urls.forEach((url, pIdx) => {
+                        const globalIndex = timelineNodesData.findIndex(n => n.node_id === node.node_id);
+                        photoHtml += `<img src="${url}" onclick="openLightboxByNode(${globalIndex}, ${pIdx})" class="w-full aspect-square object-cover rounded-xl cursor-pointer hover:shadow-lg hover:scale-105 transition-all duration-300">`;
+                    });
+                    photoHtml += `</div>`;
+                }
+                html += `
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-6 relative">
+                    <div class="flex justify-between items-start mb-3">
+                        <h4 class="text-lg font-serif-sc text-slate-800">${node.location_name || node.city}</h4>
+                        <span class="text-[10px] text-slate-400 font-sans tracking-widest bg-slate-50 px-3 py-1 rounded-full">${node.visit_time || '全天'}</span>
+                    </div>
+                    ${node.companion ? `<p class="text-xs text-blue-500 mb-3 font-medium tracking-widest">同行羁绊：${node.companion}</p>` : ''}
+                    ${node.expense ? `<p class="text-xs text-slate-500 mb-4 font-serif-sc tracking-wide">开销记录：¥${node.expense}</p>` : ''}
+                    <p class="text-sm text-slate-600 leading-relaxed font-serif-sc font-light pt-2 border-t border-slate-100">${node.diary_text || '尚未留下文字印记。'}</p>
+                    ${photoHtml}
+                </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // ================= [TR-003] 全局 Lightbox 画廊 =================
+        function openLightboxByNode(nodeIndex, photoIndex) {
+            const node = timelineNodesData[nodeIndex];
+            if(!node || !node.photo_urls) return;
+            currentLightboxPhotos = node.photo_urls;
+            currentLightboxIndex = photoIndex;
+            updateLightboxView();
+
+            const overlay = document.getElementById('lightbox-overlay');
+            overlay.classList.remove('hidden');
+            setTimeout(() => overlay.classList.replace('opacity-0', 'opacity-100'), 10);
+        }
+
+        function closeLightbox() {
+            const overlay = document.getElementById('lightbox-overlay');
+            overlay.classList.replace('opacity-100', 'opacity-0');
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+        }
+
+        function changeLightbox(direction) {
+            currentLightboxIndex += direction;
+            if(currentLightboxIndex < 0) currentLightboxIndex = currentLightboxPhotos.length - 1;
+            if(currentLightboxIndex >= currentLightboxPhotos.length) currentLightboxIndex = 0;
+            updateLightboxView();
+        }
+
+        function updateLightboxView() {
+            document.getElementById('lightbox-img').src = currentLightboxPhotos[currentLightboxIndex];
+            document.getElementById('lightbox-indicator').innerText = `IMAGE ${currentLightboxIndex + 1} / ${currentLightboxPhotos.length}`;
+        }
+        
+        // 键盘左右键支持相册翻页
+        document.addEventListener('keydown', (e) => {
+            const overlay = document.getElementById('lightbox-overlay');
+            if(!overlay.classList.contains('hidden')) {
+                if(e.key === 'ArrowLeft') changeLightbox(-1);
+                if(e.key === 'ArrowRight') changeLightbox(1);
+                if(e.key === 'Escape') closeLightbox();
+            }
+        });
+        // ========================================================
+
+        // [我的主仓面板联动优化]
         function switchVaultTab(tabName) {
             currentVaultTab = tabName;
             document.querySelectorAll('.vault-tab').forEach(el => el.classList.remove('active'));
@@ -614,8 +725,9 @@
                     });
                     html = `<div class="grid grid-cols-1 md:grid-cols-3 gap-6">`;
                     for(let c in cityGroups) {
+                        // 城市卡片点击也可以打开侧滑详情
                         html += `
-                        <div class="glass-panel p-6 rounded-3xl flex items-center gap-5 hover:-translate-y-1 transition-all border border-white/60">
+                        <div onclick="openCityDetailModal('${c}')" class="cursor-pointer glass-panel p-6 rounded-3xl flex items-center gap-5 hover:-translate-y-1 hover:shadow-lg transition-all border border-white/60">
                             <div class="w-12 h-12 rounded-full bg-blue-100/50 flex items-center justify-center text-xl shadow-inner border border-white">📍</div>
                             <div>
                                 <h4 class="font-normal text-base text-slate-800 tracking-wide">${c}</h4>
@@ -626,23 +738,25 @@
                     html += `</div>`;
                 } else if (currentVaultTab === 'nodes') {
                     html = `<div class="space-y-4">`;
-                    timelineNodesData.forEach(n => {
+                    timelineNodesData.forEach((n, index) => {
+                        // 节点卡片点击打开侧滑详情
                         html += `
-                        <div class="glass-panel p-6 rounded-2xl flex justify-between items-center hover:bg-white/60 transition-colors border border-white/60">
+                        <div onclick="openNodeDetailModal(${index})" class="cursor-pointer glass-panel p-6 rounded-2xl flex justify-between items-center hover:bg-white/90 hover:shadow-md transition-all border border-white/60">
                             <div>
                                 <span class="font-normal font-serif-sc text-slate-800 text-base tracking-widest">${n.visit_date.replace(/-/g, '.')}</span>
                                 <span class="text-[11px] text-slate-500 font-medium ml-4 tracking-[0.2em]">${n.city} · ${n.location_name || '未知'}</span>
                             </div>
-                            ${n.companion ? `<span class="text-[10px] text-slate-500 font-normal tracking-widest ml-3 border-l border-slate-300 pl-3">${n.companion}</span>` : ''}
+                            ${n.companion ? `<span class="text-[10px] text-slate-500 font-normal tracking-widest ml-3 border-l border-slate-300 pl-3 hidden md:inline-block">${n.companion}</span>` : ''}
                         </div>`;
                     });
                     html += `</div>`;
                 } else if (currentVaultTab === 'photos') {
                     html = `<div class="grid grid-cols-3 md:grid-cols-5 gap-4">`;
-                    timelineNodesData.forEach(n => {
+                    timelineNodesData.forEach((n, index) => {
                         if(n.photo_urls && n.photo_urls[0] !== "") {
-                            n.photo_urls.forEach(url => {
-                                html += `<div class="aspect-square rounded-2xl overflow-hidden shadow-md border-2 border-white/80 cursor-pointer hover:shadow-xl hover:scale-105 transition-all"><img src="${url}" class="w-full h-full object-cover"></div>`;
+                            n.photo_urls.forEach((url, pIdx) => {
+                                // 点击照片打开大图预览
+                                html += `<div class="aspect-square rounded-2xl overflow-hidden shadow-md border-2 border-white/80 cursor-pointer hover:shadow-xl hover:scale-105 transition-all"><img src="${url}" onclick="openLightboxByNode(${index}, ${pIdx})" class="w-full h-full object-cover"></div>`;
                             });
                         }
                     });
@@ -655,7 +769,7 @@
                             total += n.expense;
                             html += `
                             <div class="glass-panel p-6 rounded-2xl flex justify-between items-center border border-white/60">
-                                <span class="font-normal text-slate-800 text-sm tracking-widest">${n.city} <span class="text-[10px] text-slate-400 ml-3">${n.visit_date}</span></span>
+                                <span class="font-normal text-slate-800 text-sm tracking-widest">${n.city} <span class="text-[10px] text-slate-400 ml-3 hidden md:inline-block">${n.visit_date}</span></span>
                                 <span class="font-serif-sc font-light text-slate-700 text-lg">¥${n.expense.toFixed(2)}</span>
                             </div>`;
                         }
@@ -671,17 +785,6 @@
                 container.innerHTML = html;
                 container.style.opacity = 1;
             }, 300); 
-        }
-
-        function triggerCenteredToast(msg) {
-            const toast = document.getElementById('inline-toast');
-            document.getElementById('toast-msg').innerHTML = msg;
-            toast.classList.remove('opacity-0', '-translate-y-10', 'scale-95', 'pointer-events-none');
-            toast.classList.add('opacity-100', 'translate-y-0', 'scale-100');
-            setTimeout(() => {
-                toast.classList.remove('opacity-100', 'translate-y-0', 'scale-100');
-                toast.classList.add('opacity-0', '-translate-y-10', 'scale-95', 'pointer-events-none');
-            }, 1800);
         }
 
         function switchView(viewId) {
