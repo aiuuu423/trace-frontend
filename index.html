@@ -46,7 +46,7 @@
             <div class="text-4xl opacity-80">🪐</div>
             <div class="space-y-3 relative z-10">
                 <h3 class="text-2xl font-serif-sc font-normal text-slate-800 tracking-widest">契入漫游舱</h3>
-                <p class="text-[10px] text-slate-400 leading-relaxed font-light tracking-widest">首次使用请开辟新空域，已有账号请直接回归</p>
+                <p class="text-[10px] text-slate-400 leading-relaxed font-light tracking-widest">首次探索请开辟新空域，已有星图请直接回归</p>
             </div>
             <div class="space-y-3 relative z-10">
                 <input type="text" id="user-code-input" placeholder="输入用户名 / 账号" class="w-full px-5 py-4 bg-white/60 border border-white/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-200 text-center font-normal text-slate-700 text-sm shadow-inner transition-all">
@@ -59,28 +59,36 @@
         </div>
     </div>
 
+    <div id="photo-preview-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-[12000] hidden flex flex-col items-center justify-center transition-opacity duration-300 opacity-0" onclick="closePhotoPreview()">
+        <button class="absolute top-8 right-8 text-white/50 hover:text-white text-4xl font-light transition-colors z-50">&times;</button>
+        <button id="gallery-prev" class="absolute left-4 md:left-12 text-white/30 hover:text-white text-6xl font-light transition-all z-50 hover:-translate-x-2" onclick="event.stopPropagation(); prevPhoto()">&#8249;</button>
+        <img id="photo-preview-img" src="" class="max-w-[85vw] max-h-[85vh] object-contain transform scale-95 transition-transform duration-300 shadow-2xl rounded-sm pointer-events-auto" onclick="event.stopPropagation()">
+        <button id="gallery-next" class="absolute right-4 md:right-12 text-white/30 hover:text-white text-6xl font-light transition-all z-50 hover:translate-x-2" onclick="event.stopPropagation(); nextPhoto()">&#8250;</button>
+        <div id="gallery-counter" class="absolute bottom-8 text-white/50 text-xs tracking-widest font-sans font-medium">1 / 1</div>
+    </div>
+
     <button onclick="openFeedback()" class="fixed bottom-8 right-8 w-14 h-14 bg-white/90 backdrop-blur-md rounded-full shadow-2xl flex items-center justify-center text-2xl z-[9000] border border-white hover:scale-110 transition-transform duration-300">💬</button>
     
     <div id="feedback-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[10500] hidden flex justify-end transition-opacity duration-300 opacity-0">
         <div class="w-full md:w-[400px] bg-[#f8fafc] h-full shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col" id="feedback-drawer">
             <div class="px-8 py-6 border-b border-slate-200 flex justify-between items-center bg-white/80 backdrop-blur-md">
-                <h3 class="text-xl font-serif-sc text-slate-800 tracking-wider">产品反馈站</h3>
+                <h3 class="text-xl font-serif-sc text-slate-800 tracking-wider">星空回音站</h3>
                 <button onclick="closeFeedback()" class="text-3xl text-slate-400 hover:text-slate-800 transition-colors">&times;</button>
             </div>
             <div class="p-8 flex-1 space-y-6 overflow-y-auto">
                 <div>
-                    <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase">反馈类型</label>
+                    <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase">回音类型</label>
                     <select id="fb-type" class="w-full px-5 py-4 bg-white rounded-xl focus:ring-2 focus:ring-blue-100 text-sm border-none shadow-sm outline-none">
-                        <option>💡 体验与功能建议</option>
-                        <option>🐛 遇到 Bug 报错</option>
-                        <option>🎨 视觉与交互吐槽</option>
+                        <option>💡 体验与功能期待</option>
+                        <option>🐛 遇到星轨偏差 (Bug)</option>
+                        <option>🎨 视觉与交互感想</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase">详细内容</label>
-                    <textarea id="fb-content" rows="6" placeholder="请尽情吐槽或留下建议，这将自动同步至开发者的飞书数据中心..." class="w-full px-5 py-5 bg-white rounded-xl focus:ring-2 focus:ring-blue-100 text-sm font-normal shadow-sm outline-none leading-relaxed resize-none"></textarea>
+                    <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase">详细回音</label>
+                    <textarea id="fb-content" rows="6" placeholder="请留下你的回音，它将化作电波，同步至开发者的星空数据中心..." class="w-full px-5 py-5 bg-white rounded-xl focus:ring-2 focus:ring-blue-100 text-sm font-normal shadow-sm outline-none leading-relaxed resize-none"></textarea>
                 </div>
-                <button onclick="submitFeedback()" class="w-full py-4 bg-[#1e293b] text-white font-normal rounded-xl shadow-lg hover:bg-slate-700 transition-all text-xs tracking-[0.2em]">🚀 发射至星空监测站</button>
+                <button onclick="submitFeedback()" class="w-full py-4 bg-[#1e293b] text-white font-normal rounded-xl shadow-lg hover:bg-slate-700 transition-all text-xs tracking-[0.2em]">🚀 发射至监测站</button>
             </div>
         </div>
     </div>
@@ -92,6 +100,17 @@
                 <button onclick="closeDetailModal()" class="text-3xl text-slate-400 hover:text-slate-800 transition-colors">&times;</button>
             </div>
             <div class="p-8 space-y-6" id="detail-modal-content"></div>
+        </div>
+    </div>
+
+    <div id="custom-confirm" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[11000] hidden flex items-center justify-center transition-opacity duration-300 opacity-0">
+        <div class="glass-panel p-8 max-w-sm w-full mx-4 text-center transform scale-95 transition-transform duration-300" id="custom-confirm-box">
+            <div class="text-3xl mb-4">🍂</div>
+            <h3 class="text-lg font-serif-sc text-slate-800 mb-8 leading-relaxed" id="custom-confirm-msg">提示信息</h3>
+            <div class="flex gap-4">
+                <button id="custom-confirm-cancel" class="flex-1 py-3 px-4 bg-white/80 text-slate-600 font-normal rounded-xl hover:bg-white transition-all tracking-widest text-sm border border-slate-200 shadow-sm">取消</button>
+                <button id="custom-confirm-ok" class="flex-1 py-3 px-4 bg-red-50 text-red-500 font-normal rounded-xl shadow-sm hover:bg-red-100 transition-all text-sm tracking-widest">确认</button>
+            </div>
         </div>
     </div>
 
@@ -108,14 +127,20 @@
             <button id="global-back-btn" onclick="goBack()" class="hidden px-5 py-2.5 rounded-full glass-btn text-xs font-normal tracking-widest">← 返回</button>
         </div>
         <div class="flex items-center gap-4">
+            <button onclick="switchView('landing-view')" class="px-5 py-2.5 rounded-full glass-btn text-xs font-normal tracking-widest">首页</button>
             <button onclick="switchView('dashboard-view')" class="px-5 py-2.5 rounded-full glass-btn text-xs font-normal tracking-widest">地球大盘</button>
-            <button onclick="switchView('vault-view')" class="px-5 py-2.5 rounded-full glass-btn text-xs font-normal tracking-widest">我的主仓</button>
             
-            <div class="flex items-center gap-2 ml-2 bg-slate-800/80 backdrop-blur-md rounded-full pr-5 pl-2 py-1.5 shadow-lg group relative cursor-pointer" onclick="document.getElementById('avatar-upload').click()" title="点击更换专属头像">
-                <img id="nav-avatar" src="https://api.dicebear.com/7.x/notionists/svg?seed=trace" class="w-8 h-8 rounded-full bg-white/20 object-cover border border-white/50">
-                <span id="user-badge" class="text-white text-[11px] font-normal tracking-widest ml-2 truncate max-w-[80px]">未登录</span>
+            <div class="flex items-center gap-2 ml-2 bg-slate-800/80 hover:bg-slate-700 backdrop-blur-md rounded-full pr-6 pl-2 py-1.5 shadow-lg relative cursor-pointer transition-colors border border-white/10" onclick="switchView('vault-view')">
+                <div class="relative group/avatar cursor-pointer" onclick="event.stopPropagation(); document.getElementById('avatar-upload').click();" title="点击焕新星空面容">
+                    <img id="nav-avatar" src="" class="w-8 h-8 rounded-full bg-slate-900 object-cover border border-white/30 shadow-sm">
+                    <div class="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                        <span class="text-white text-[9px] tracking-widest">焕新</span>
+                    </div>
+                </div>
+                <span id="user-badge" class="text-white text-[11px] font-normal tracking-widest ml-2 truncate max-w-[150px]">未契入星空</span>
                 <input type="file" id="avatar-upload" accept="image/*" class="hidden" onchange="uploadAvatar(event)">
             </div>
+            
             <button onclick="logout()" title="安全退出当前账号" class="w-10 h-10 rounded-full glass-btn flex items-center justify-center text-sm shadow-sm hover:bg-red-50 hover:text-red-500 transition-colors">🚪</button>
         </div>
     </header>
@@ -126,7 +151,7 @@
                 在地球的坐标里<br>收纳你闪闪发光的日子
             </h1>
             <div class="flex flex-col md:flex-row justify-center items-center gap-6 pt-6">
-                <button onclick="openRecordView()" class="w-56 py-4 bg-[#1e293b] text-white font-normal rounded-full shadow-2xl hover:bg-slate-700 hover:-translate-y-1 transition-all text-sm tracking-[0.15em]">+ 新增行程记录</button>
+                <button onclick="openRecordView()" class="w-56 py-4 bg-[#1e293b] text-white font-normal rounded-full shadow-2xl hover:bg-slate-700 hover:-translate-y-1 transition-all text-sm tracking-[0.15em]">+ 刻录新足迹</button>
                 <button onclick="switchView('dashboard-view')" class="w-56 py-4 glass-btn text-slate-700 font-normal rounded-full text-sm tracking-[0.15em]">漫游记忆大盘</button>
             </div>
         </div>
@@ -138,7 +163,7 @@
             <form class="space-y-8" id="trace-form" onsubmit="handleFormSubmit(event)">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div>
-                        <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase">旅行日期 *</label>
+                        <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase">相遇日期 *</label>
                         <input type="date" id="form-date" required class="w-full px-5 py-4 bg-white/70 border border-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-100 font-normal text-slate-700 transition-all text-sm">
                     </div>
                     <div>
@@ -146,19 +171,19 @@
                         <select id="form-province" required onchange="populateCities()" class="w-full px-5 py-4 bg-white/70 border border-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-100 font-normal text-slate-700 text-sm cursor-pointer"><option value="" disabled selected>选择省份</option></select>
                     </div>
                     <div>
-                        <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase">目的城市 *</label>
+                        <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase">落脚城市 *</label>
                         <select id="form-city" required class="w-full px-5 py-4 bg-white/70 border border-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-100 font-normal text-slate-700 text-sm cursor-pointer"><option value="" disabled selected>先选省份</option></select>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div>
-                        <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase">具体时间</label>
-                        <input type="text" id="form-time" placeholder="如：23:00" class="w-full px-5 py-4 bg-white/70 border border-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-100 text-sm font-normal text-slate-700">
+                        <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase">具体时刻</label>
+                        <input type="text" id="form-time" placeholder="如：日落时分 / 23:00" class="w-full px-5 py-4 bg-white/70 border border-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-100 text-sm font-normal text-slate-700">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase">景点/落脚点名称</label>
-                        <input type="text" id="form-location" placeholder="如：玉林路" class="w-full px-5 py-4 bg-white/70 border border-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-100 text-sm font-normal text-slate-700">
+                        <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase">坐标名称</label>
+                        <input type="text" id="form-location" placeholder="如：玉林路尽头" class="w-full px-5 py-4 bg-white/70 border border-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-100 text-sm font-normal text-slate-700">
                     </div>
                     <div>
                         <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase">同行羁绊</label>
@@ -167,27 +192,27 @@
                 </div>
 
                 <div>
-                    <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase">开销记录</label>
+                    <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase">尘世开销</label>
                     <input type="number" id="form-expense" placeholder="¥ (选填)" class="w-full px-5 py-4 bg-white/70 border border-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-100 text-sm font-normal text-slate-700">
                 </div>
                 
                 <div>
-                    <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase flex items-center justify-between"><span>影像档案 (照片)</span></label>
+                    <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase flex items-center justify-between"><span>光影留存 (照片)</span></label>
                     <input type="file" id="photo-input" accept="image/*" multiple class="hidden" onchange="processPhotos(event)">
                     <div onclick="document.getElementById('photo-input').click()" class="w-full h-24 border border-dashed border-slate-300 rounded-2xl flex flex-col justify-center items-center cursor-pointer bg-white/40 hover:bg-white/80 transition-all">
-                        <span class="text-2xl opacity-60">📷 上传/追加照片</span>
+                        <span class="text-2xl opacity-60">📷 上传/追加瞬间</span>
                     </div>
                     <div id="photo-preview-box" class="grid grid-cols-4 md:grid-cols-6 gap-4 mt-5"></div>
                 </div>
 
                 <div>
                     <label class="block text-[11px] font-medium text-slate-400 mb-3 tracking-widest uppercase">游记/旅程随笔</label>
-                    <textarea id="form-diary" rows="4" placeholder="写下这一刻的感受..." class="w-full px-5 py-5 bg-white/70 border border-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-100 text-sm font-serif-sc font-normal leading-loose text-slate-700"></textarea>
+                    <textarea id="form-diary" rows="4" placeholder="写下这一刻的风声与心绪..." class="w-full px-5 py-5 bg-white/70 border border-white rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-100 text-sm font-serif-sc font-normal leading-loose text-slate-700"></textarea>
                 </div>
 
                 <div class="pt-4 flex gap-4">
-                    <button type="submit" class="flex-1 py-4 bg-[#1e293b] text-white font-normal rounded-2xl shadow-xl hover:bg-slate-700 hover:-translate-y-1 transition-all tracking-widest text-sm">💾 归档入库</button>
-                    <button type="button" onclick="goBack()" class="py-4 px-8 bg-white/80 text-slate-600 font-normal rounded-2xl hover:bg-white transition-all tracking-widest text-sm border border-slate-200 shadow-sm">取消</button>
+                    <button type="submit" class="flex-1 py-4 bg-[#1e293b] text-white font-normal rounded-2xl shadow-xl hover:bg-slate-700 hover:-translate-y-1 transition-all tracking-widest text-sm">铭刻入库</button>
+                    <button type="button" onclick="goBack()" class="py-4 px-8 bg-white/80 text-slate-600 font-normal rounded-2xl hover:bg-white transition-all tracking-widest text-sm border border-slate-200 shadow-sm">暂且搁置</button>
                 </div>
             </form>
         </div>
@@ -195,10 +220,10 @@
 
     <section id="dashboard-view" class="view-section hidden relative z-10 min-h-screen px-4 md:px-12 py-28 flex flex-col">
         <div class="w-full max-w-6xl mx-auto flex justify-between items-center mb-10">
-            <h2 class="text-2xl font-serif-sc font-normal text-slate-800 tracking-[0.2em]">我的地球大盘</h2>
+            <h2 class="text-2xl font-serif-sc font-normal text-slate-800 tracking-[0.2em]">漫游记忆大盘</h2>
             <div class="flex p-1 glass-panel rounded-full" style="box-shadow: none;">
-                <button id="btn-map" onclick="toggleSubView('map')" class="px-6 py-2.5 text-[11px] font-medium rounded-full bg-slate-800 text-white shadow-md tracking-widest">版图视角</button>
-                <button id="btn-timeline" onclick="toggleSubView('timeline')" class="px-6 py-2.5 text-[11px] font-medium rounded-full text-slate-500 hover:text-slate-800 tracking-widest transition-colors">时间轴视角</button>
+                <button id="btn-map" onclick="toggleSubView('map')" class="px-6 py-2.5 text-[11px] font-medium rounded-full bg-slate-800 text-white shadow-md tracking-widest transition-all">星图视角</button>
+                <button id="btn-timeline" onclick="toggleSubView('timeline')" class="px-6 py-2.5 text-[11px] font-medium rounded-full text-slate-500 hover:text-slate-800 tracking-widest transition-all">时间之轨</button>
             </div>
         </div>
 
@@ -206,12 +231,12 @@
             <div id="sub-view-map" class="w-full glass-panel p-8 md:p-12 flex flex-col md:flex-row gap-12 items-center justify-between relative shadow-xl">
                 <div class="w-full md:w-1/4 space-y-8 z-10 relative">
                     <div class="space-y-2">
-                        <p class="text-[10px] text-blue-500 uppercase tracking-[0.3em] font-medium">EXPLORED</p>
+                        <p class="text-[10px] text-blue-500 uppercase tracking-[0.3em] font-medium">ILLUMINATED</p>
                         <h3 id="stat-cities-count" class="text-6xl font-serif-sc font-light text-slate-800 tracking-tighter">0 <span class="text-xs font-normal text-slate-400 font-sans tracking-widest uppercase ml-1">省份点亮</span></h3>
                     </div>
                 </div>
                 <div class="w-full md:w-3/4 h-[55vh] md:h-[65vh] min-h-[400px] bg-[#0f172a] rounded-[2rem] relative border border-slate-700/30 flex items-center justify-center overflow-hidden shadow-2xl">
-                    <div class="absolute top-6 left-6 z-20 text-white/50 text-[10px] tracking-widest pointer-events-none">✨ 提示：点击高亮省份自动下钻查看记录</div>
+                    <div class="absolute top-6 left-6 z-20 text-white/50 text-[10px] tracking-widest pointer-events-none">✨ 拨开云雾：点击高亮省份，翻阅专属漫游录</div>
                     <div id="echarts-map-container" style="width:100%; height:100%;"></div>
                 </div>
             </div>
@@ -227,10 +252,10 @@
         <div class="w-full h-64 bg-transparent relative overflow-hidden"></div>
         <div class="max-w-5xl mx-auto px-4 -mt-40 relative z-20 space-y-12">
             <div class="flex flex-col items-center gap-6 px-4">
-                <div class="relative group cursor-pointer" onclick="document.getElementById('avatar-upload').click()">
-                    <img id="vault-avatar" src="https://api.dicebear.com/7.x/notionists/svg?seed=trace" class="w-24 h-24 rounded-full border-4 border-white shadow-xl object-cover bg-white">
-                    <div class="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span class="text-white text-xs tracking-widest">更换</span>
+                <div class="relative group/vaultAvatar cursor-pointer" onclick="document.getElementById('avatar-upload').click()" title="点击焕新星空面容">
+                    <img id="vault-avatar" src="" class="w-24 h-24 rounded-full border-4 border-white shadow-xl object-cover bg-slate-900">
+                    <div class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover/vaultAvatar:opacity-100 transition-opacity duration-300">
+                        <span class="text-white text-xs tracking-widest">焕新面容</span>
                     </div>
                 </div>
                 <h2 class="text-2xl font-serif-sc font-normal text-slate-800 tracking-[0.2em]" id="vault-user-title">Trace 主仓</h2>
@@ -249,8 +274,8 @@
                     <p class="text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] mt-3">影像档案</p>
                 </div>
                 <div onclick="switchVaultTab('expenses')" id="tab-expenses" class="vault-tab glass-panel p-8 text-center cursor-pointer">
-                    <p id="vault-expense-stat" class="text-2xl font-light font-serif-sc text-slate-800 mt-2">¥0</p>
-                    <p class="text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] mt-4">总计开销</p>
+                    <p id="vault-expense-stat" class="text-4xl font-light text-slate-800 font-serif-sc tracking-tight">¥0</p>
+                    <p class="text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] mt-3">总计开销</p>
                 </div>
             </div>
             <div class="glass-panel p-10 min-h-[40vh] border border-white shadow-xl">
@@ -262,14 +287,21 @@
     <script>
         const BACKEND_URL = "https://aiuu423.pythonanywhere.com"; 
         
+        // 修复 Bug 4: 全新绘制深邃极光星轨高级专属头像
+        const DEFAULT_AVATAR_B64 = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230f172a'/%3E%3Cstop offset='100%25' stop-color='%23020617'/%3E%3C/linearGradient%3E%3ClinearGradient id='glow' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%233b82f6' stop-opacity='0.8'/%3E%3Cstop offset='100%25' stop-color='%238b5cf6' stop-opacity='0'/%3E%3C/linearGradient%3E%3Cfilter id='blur' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeGaussianBlur stdDeviation='2'/%3E%3C/filter%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23bg)'/%3E%3Ccircle cx='30' cy='30' r='20' fill='url(%23glow)' filter='url(%23blur)'/%3E%3Cpath d='M 10 50 Q 50 10 90 70' fill='none' stroke='rgba(255,255,255,0.2)' stroke-width='0.5' /%3E%3Cpath d='M 50 25 L 52 38 L 65 40 L 52 42 L 50 55 L 48 42 L 35 40 L 48 38 Z' fill='rgba(255,255,255,0.9)'/%3E%3Ccircle cx='70' cy='25' r='1' fill='rgba(255,255,255,0.6)'/%3E%3Ccircle cx='20' cy='65' r='1.5' fill='rgba(255,255,255,0.4)'/%3E%3Ccircle cx='80' cy='80' r='0.8' fill='rgba(255,255,255,0.3)'/%3E%3C/svg%3E";
+
         let historyStack = ['landing-view'];
         let timelineNodesData = []; 
         let echartsInstance = null;
         let currentVaultTab = 'cities'; 
         let editingNodeId = null; 
         let compressedPhotoB64Array = []; 
+        
+        // 画廊全局变量
+        let currentGallery = [];
+        let currentGalleryIndex = 0;
+        let vaultAllPhotos = []; 
 
-        // 绝对完整、校验无误的城市坐标全字典
         const geoProvinceCityLib = {
             "北京": {"北京市": [116.40, 39.90]}, "上海": {"上海市": [121.47, 31.23]}, "天津": {"天津市": [117.20, 39.13]}, "重庆": {"重庆市": [106.50, 29.53]},
             "河北": {"石家庄市": [114.51, 38.04], "唐山市": [118.17, 39.63], "秦皇岛市": [119.58, 39.93], "邯郸市": [114.49, 36.60], "邢台市": [114.49, 37.05], "保定市": [115.48, 38.86], "张家口市": [114.88, 40.81], "承德市": [117.93, 40.97], "沧州市": [116.83, 38.30], "廊坊市": [116.70, 39.52], "衡水市": [115.66, 37.73]},
@@ -302,6 +334,82 @@
             "港澳台": {"香港": [114.17, 22.28], "澳门": [113.54, 22.19], "台湾": [121.50, 25.03]}
         };
 
+        // --- 修复 Bug 3: 全局无缝画廊灯箱组件 ---
+        function openNodeGallery(nodeId, startIndex) {
+            const node = timelineNodesData.find(n => n.node_id === nodeId);
+            if(!node) return;
+            currentGallery = node.photo_urls;
+            currentGalleryIndex = startIndex;
+            showGalleryModal();
+        }
+
+        function openVaultGallery(startIndex) {
+            currentGallery = vaultAllPhotos.map(p => p.url);
+            currentGalleryIndex = startIndex;
+            showGalleryModal();
+        }
+
+        function showGalleryModal() {
+            const modal = document.getElementById('photo-preview-modal');
+            const img = document.getElementById('photo-preview-img');
+            updateGalleryUI();
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.replace('opacity-0', 'opacity-100');
+                img.classList.replace('scale-95', 'scale-100');
+            }, 10);
+        }
+
+        function closePhotoPreview() {
+            const modal = document.getElementById('photo-preview-modal');
+            const img = document.getElementById('photo-preview-img');
+            modal.classList.replace('opacity-100', 'opacity-0');
+            img.classList.replace('scale-100', 'scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function updateGalleryUI() {
+            document.getElementById('photo-preview-img').src = currentGallery[currentGalleryIndex];
+            document.getElementById('gallery-counter').innerText = `${currentGalleryIndex + 1} / ${currentGallery.length}`;
+            document.getElementById('gallery-prev').style.display = currentGalleryIndex === 0 ? 'none' : 'block';
+            document.getElementById('gallery-next').style.display = currentGalleryIndex === currentGallery.length - 1 ? 'none' : 'block';
+        }
+
+        function prevPhoto() {
+            if (currentGalleryIndex > 0) {
+                currentGalleryIndex--;
+                updateGalleryUI();
+            }
+        }
+
+        function nextPhoto() {
+            if (currentGalleryIndex < currentGallery.length - 1) {
+                currentGalleryIndex++;
+                updateGalleryUI();
+            }
+        }
+
+        // --- 修复 Bug 1: 优雅高阶全局弹窗 ---
+        function showCustomConfirm(msg, confirmTxt, cancelTxt, onConfirm) {
+            const modal = document.getElementById('custom-confirm');
+            const box = document.getElementById('custom-confirm-box');
+            document.getElementById('custom-confirm-msg').innerHTML = msg;
+            document.getElementById('custom-confirm-ok').innerText = confirmTxt;
+            document.getElementById('custom-confirm-cancel').innerText = cancelTxt;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.replace('opacity-0', 'opacity-100'); box.classList.replace('scale-95', 'scale-100'); }, 10);
+            
+            document.getElementById('custom-confirm-cancel').onclick = function() {
+                modal.classList.replace('opacity-100', 'opacity-0'); box.classList.replace('scale-100', 'scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            };
+            document.getElementById('custom-confirm-ok').onclick = function() {
+                modal.classList.replace('opacity-100', 'opacity-0'); box.classList.replace('scale-100', 'scale-95');
+                setTimeout(() => { modal.classList.add('hidden'); onConfirm(); }, 300);
+            };
+        }
+
         // --- 初始化与免密认证 ---
         function initDropdowns() {
             const provSelect = document.getElementById('form-province');
@@ -321,14 +429,16 @@
             }
         }
 
+        // 修复 Bug 5 & 4: 初始化用户状态与默认头像
         function checkUserLogin() {
             const code = localStorage.getItem('trace_user_code');
-            const avatar = localStorage.getItem('trace_user_avatar') || `https://api.dicebear.com/7.x/notionists/svg?seed=${code}`;
+            const avatar = localStorage.getItem('trace_user_avatar') || DEFAULT_AVATAR_B64;
             if (!code) {
                 document.getElementById('auth-overlay').classList.remove('hidden');
+                document.getElementById('user-badge').innerText = "未契入星空";
                 return false;
             }
-            document.getElementById('user-badge').innerText = code;
+            document.getElementById('user-badge').innerText = `${code} 的漫游仓`;
             document.getElementById('vault-user-title').innerText = `${code} 的漫游仓`;
             document.getElementById('nav-avatar').src = avatar;
             document.getElementById('vault-avatar').src = avatar;
@@ -351,24 +461,26 @@
                 if (response.ok) {
                     localStorage.setItem('trace_user_code', code);
                     if(resData.avatar) localStorage.setItem('trace_user_avatar', resData.avatar);
+                    else if(type === 'register') localStorage.setItem('trace_user_avatar', DEFAULT_AVATAR_B64);
+                    
                     document.getElementById('auth-overlay').classList.add('hidden');
                     checkUserLogin();
                     loadDataFromDatabase();
-                    triggerToast(resData.message);
+                    triggerToast(type === 'login' ? "✨ 欢迎重返星空" : "✨ 新空域已开辟");
                 } else {
                     triggerToast(resData.message); 
                 }
             } catch (e) {
-                triggerToast("网络异常，请确认后端服务已唤醒");
+                triggerToast("信号丢失，请确认星空监测站已唤醒");
             }
         }
 
         function logout() {
-            if(confirm("确定要退出当前账号吗？")) {
+            showCustomConfirm("确定要切断连接，<br>安全退出当前漫游舱吗？", "切断连接", "留在舱内", () => {
                 localStorage.removeItem('trace_user_code');
                 localStorage.removeItem('trace_user_avatar');
                 location.reload();
-            }
+            });
         }
 
         // --- 核心业务 API (增删改查) ---
@@ -414,27 +526,28 @@
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
                 });
                 if (res.ok) {
-                    triggerToast(editingNodeId ? "记录已更新" : "记忆已归档");
+                    triggerToast(editingNodeId ? "✨ 行迹坐标已重新校准" : "✨ 新的记忆已铭刻于星空");
                     resetForm();
                     setTimeout(() => { switchView('dashboard-view'); loadDataFromDatabase(); }, 1200);
                 }
-            } catch (error) { triggerToast("网络异常"); }
+            } catch (error) { triggerToast("铭刻失败，星区信号微弱"); }
         }
 
         async function deleteNode(nodeId) {
-            if(!confirm("确定要永久擦除这条记忆吗？")) return;
-            const currentCode = checkUserLogin();
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/delete_node`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ node_id: nodeId, user_code: currentCode })
-                });
-                if (res.ok) {
-                    triggerToast("记忆已擦除");
-                    closeDetailModal();
-                    loadDataFromDatabase();
-                }
-            } catch(e) { triggerToast("删除失败"); }
+            showCustomConfirm("这段记忆将化作星尘永远消散，<br>确定要擦除吗？", "化作星尘", "留存记忆", async () => {
+                const currentCode = localStorage.getItem('trace_user_code');
+                try {
+                    const res = await fetch(`${BACKEND_URL}/api/delete_node`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ node_id: nodeId, user_code: currentCode })
+                    });
+                    if (res.ok) {
+                        triggerToast("✨ 一段行迹已化作星尘散去");
+                        closeDetailModal();
+                        loadDataFromDatabase();
+                    }
+                } catch(e) { triggerToast("擦除失败，星空引力过大"); }
+            });
         }
 
         function editNode(nodeId) {
@@ -456,7 +569,7 @@
             document.getElementById('form-diary').value = node.diary_text || '';
             
             compressedPhotoB64Array = [...node.photo_urls];
-            renderPhotoPreview();
+            renderPhotoPreviewEditor();
             
             closeDetailModal();
             switchView('record-view');
@@ -491,14 +604,15 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         compressedPhotoB64Array.push(canvas.toDataURL('image/jpeg', 0.6));
-                        renderPhotoPreview();
+                        renderPhotoPreviewEditor();
                     };
                     img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             }
         }
-        function renderPhotoPreview() {
+        
+        function renderPhotoPreviewEditor() {
             const box = document.getElementById('photo-preview-box');
             box.innerHTML = '';
             compressedPhotoB64Array.forEach(b64 => {
@@ -509,6 +623,8 @@
         async function uploadAvatar(event) {
             const file = event.target.files[0];
             if(!file) return;
+            triggerToast("✨ 正在萃取影像，为您焕新专属面容...");
+            
             const currentCode = checkUserLogin();
             const reader = new FileReader();
             reader.onload = async function(e) {
@@ -527,6 +643,8 @@
                     fetch(`${BACKEND_URL}/api/update_avatar`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ user_code: currentCode, avatar_url: b64 })
+                    }).then(res => {
+                        if(res.ok) triggerToast("✨ 头像焕新成功");
                     });
                 };
                 img.src = e.target.result;
@@ -534,7 +652,7 @@
             reader.readAsDataURL(file);
         }
 
-        // --- ECharts 地图下钻逻辑 (V1.2核心) ---
+        // --- ECharts 地图下钻逻辑 ---
         function renderPolygonEchartsMap() {
             const uniqueCities = [...new Set(timelineNodesData.map(n => n.city))];
             const illuminatedProvinces = new Set();
@@ -562,7 +680,7 @@
 
             const option = {
                 backgroundColor: 'transparent',
-                tooltip: { trigger: 'item', formatter: '{b} (点击下钻查看漫游录)' },
+                tooltip: { trigger: 'item', formatter: '{b} (点击翻阅专属漫游录)' },
                 geo: {
                     map: 'china', roam: true, zoom: 1.2,
                     label: { emphasis: { show: false } },
@@ -602,7 +720,6 @@
             setTimeout(() => document.getElementById('feedback-modal').classList.add('hidden'), 300);
         }
         async function submitFeedback() {
-            // 替换为这行：直接从本地存储读取，避免触发强制登录弹窗
             const currentCode = localStorage.getItem('trace_user_code') || '匿名漫游者';
             const type = document.getElementById('fb-type').value;
             const content = document.getElementById('fb-content').value.trim();
@@ -614,11 +731,11 @@
                     body: JSON.stringify({ user_code: currentCode, type: type, content: content })
                 });
                 if(res.ok) {
-                    triggerToast("发射成功！星空监测员已收到");
+                    triggerToast("🚀 发射成功！星空监测员已收到你的回音");
                     document.getElementById('fb-content').value = '';
                     closeFeedback();
                 }
-            } catch(e) { triggerToast("发送失败，可能是信号不好"); }
+            } catch(e) { triggerToast("呼叫星空监测站失败，请检查信号"); }
         }
 
         // --- 抽屉展示与辅助工具 ---
@@ -628,7 +745,7 @@
 
         function openProvinceDetailDrawer(provinceName) {
             const nodes = timelineNodesData.filter(n => getProvinceByExactCity(n.city) === provinceName);
-            if(nodes.length === 0) { triggerToast(`${provinceName} 暂无行迹`); return; }
+            if(nodes.length === 0) { triggerToast(`${provinceName} 暂未留下足迹`); return; }
             document.getElementById('detail-modal-title').innerText = `📍 ${provinceName} 漫游录`;
             renderNodesToDrawer(nodes);
             slideInDrawer();
@@ -660,9 +777,17 @@
             const container = document.getElementById('detail-modal-content');
             let html = '';
             nodes.forEach(node => {
+                let photoHtml = '';
+                if (node.photo_urls && node.photo_urls.length > 0 && node.photo_urls[0] !== "") {
+                    photoHtml = `<div class="flex gap-2 overflow-x-auto mt-4 pb-2 scrollbar-hide">`;
+                    node.photo_urls.forEach((url, idx) => {
+                        photoHtml += `<img src="${url}" onclick="openNodeGallery(${node.node_id}, ${idx})" class="h-20 w-20 object-cover rounded-xl shadow-sm border border-slate-200 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">`;
+                    });
+                    photoHtml += `</div>`;
+                }
                 html += `
                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-6 relative group">
-                    <div class="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                    <div class="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 z-10">
                         <button onclick="editNode(${node.node_id})" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-xs shadow-sm" title="修改记录">✏️</button>
                         <button onclick="deleteNode(${node.node_id})" class="p-2 bg-red-50 hover:bg-red-100 text-red-500 rounded-full text-xs shadow-sm" title="擦除记录">🗑️</button>
                     </div>
@@ -674,7 +799,8 @@
                         ${node.companion ? `<p>羁绊：${node.companion}</p>` : ''}
                         ${node.expense ? `<p>开销：¥${node.expense}</p>` : ''}
                     </div>
-                    <p class="text-sm text-slate-600 leading-relaxed font-serif-sc font-light pt-2 border-t border-slate-100">${node.diary_text || '暂无游记随笔...'}</p>
+                    <p class="text-sm text-slate-600 leading-relaxed font-serif-sc font-light pt-2 border-t border-slate-100">${node.diary_text || '没有留下只言片语，或许此时无声胜有声...'}</p>
+                    ${photoHtml}
                 </div>`;
             });
             container.innerHTML = html;
@@ -684,6 +810,14 @@
             const container = document.getElementById('timeline-container');
             container.innerHTML = '';
             timelineNodesData.forEach(node => {
+                let photoHtml = '';
+                if (node.photo_urls && node.photo_urls.length > 0 && node.photo_urls[0] !== "") {
+                    photoHtml = `<div class="flex gap-2 overflow-x-auto mt-4 pb-2 scrollbar-hide">`;
+                    node.photo_urls.forEach((url, idx) => {
+                        photoHtml += `<img src="${url}" onclick="openNodeGallery(${node.node_id}, ${idx})" class="h-16 w-16 object-cover rounded-lg shadow-sm border border-slate-200 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">`;
+                    });
+                    photoHtml += `</div>`;
+                }
                 container.innerHTML += `
                 <div class="relative flex items-start mb-16 w-full group">
                     <div class="hidden md:block w-[22%] text-right pr-12 pt-3">
@@ -694,7 +828,8 @@
                     <div class="w-full pl-16 md:pl-12 md:w-[78%]">
                         <div class="glass-panel p-6 rounded-3xl">
                             <h4 class="text-lg font-serif-sc text-slate-800">${node.location_name || node.city}</h4>
-                            <p class="text-sm text-slate-500 mt-2 font-serif-sc">${node.diary_text || '无随笔'}</p>
+                            <p class="text-sm text-slate-500 mt-2 font-serif-sc">${node.diary_text || '没有留下只言片语，或许此时无声胜有声...'}</p>
+                            ${photoHtml}
                         </div>
                     </div>
                 </div>`;
@@ -712,8 +847,8 @@
             const cityGroups = {}; let totalPhotos = 0, totalExpense = 0;
             timelineNodesData.forEach(n => {
                 if(!cityGroups[n.city]) cityGroups[n.city] = 1;
-                if(n.expense) totalExpense += n.expense;
-                if(n.photo_urls && n.photo_urls[0] !== "") totalPhotos += n.photo_urls.length;
+                if(n.expense && !isNaN(parseFloat(n.expense))) totalExpense += parseFloat(n.expense);
+                if(n.photo_urls && n.photo_urls.length > 0 && n.photo_urls[0] !== "") totalPhotos += n.photo_urls.length;
             });
             document.getElementById('vault-city-stat').innerText = Object.keys(cityGroups).length;
             document.getElementById('vault-node-stat').innerText = timelineNodesData.length;
@@ -724,13 +859,84 @@
         function renderVaultTabContent() {
             const container = document.getElementById('vault-content-dynamic');
             let html = '';
-            if(timelineNodesData.length === 0) html = `<div class="text-center py-12 text-slate-400 text-sm">暂无数据记录</div>`;
-            else if(currentVaultTab === 'cities') {
-                const cityGroups = {};
-                timelineNodesData.forEach(n => { if(!cityGroups[n.city]) cityGroups[n.city] = 0; cityGroups[n.city]++; });
+            
+            if(timelineNodesData.length === 0) {
+                html = `<div class="text-center py-16 text-slate-400 text-sm font-serif-sc tracking-widest">星空尚且空白，等待你的第一次闪烁...</div>`;
+            } else if(currentVaultTab === 'cities') {
+                const cityData = {};
+                timelineNodesData.forEach(n => { 
+                    if(!cityData[n.city]) cityData[n.city] = { count: 0, cover: null }; 
+                    cityData[n.city].count++; 
+                    if(!cityData[n.city].cover && n.photo_urls && n.photo_urls.length > 0 && n.photo_urls[0] !== "") {
+                        cityData[n.city].cover = n.photo_urls[0];
+                    }
+                });
                 html = `<div class="grid grid-cols-2 md:grid-cols-4 gap-4">`;
-                for(let c in cityGroups) html += `<div onclick="openCityDetailDrawer('${c}')" class="p-4 border border-slate-100 rounded-2xl cursor-pointer hover:shadow-md text-center bg-white/50"><h4 class="text-slate-800">${c}</h4><p class="text-[10px] text-slate-400 mt-1">${cityGroups[c]} 条记录</p></div>`;
+                for(let c in cityData) {
+                    let imgHtml = cityData[c].cover ? `<img src="${cityData[c].cover}" class="w-10 h-10 rounded-full object-cover border border-slate-200/50 shadow-sm flex-shrink-0">` : '';
+                    html += `
+                    <div onclick="openCityDetailDrawer('${c}')" class="p-4 border border-slate-100 rounded-2xl cursor-pointer hover:shadow-md bg-white/50 transition-all flex items-center justify-center gap-3">
+                        ${imgHtml}
+                        <div class="${imgHtml ? 'text-left' : 'text-center'}">
+                            <h4 class="text-slate-800 font-medium">${c}</h4>
+                            <p class="text-[10px] text-slate-400 mt-1">${cityData[c].count} 条记录</p>
+                        </div>
+                    </div>`;
+                }
                 html += `</div>`;
+            } else if(currentVaultTab === 'nodes') {
+                html = `<div class="space-y-4">`;
+                timelineNodesData.forEach(n => {
+                    html += `
+                    <div class="glass-panel p-5 flex justify-between items-center hover:bg-white/80 transition-all cursor-pointer" onclick="openCityDetailDrawer('${n.city}')">
+                        <div>
+                            <h4 class="text-slate-800 font-serif-sc text-lg">${n.location_name || n.city}</h4>
+                            <p class="text-xs text-slate-400 mt-1 tracking-widest">${n.visit_date.replace(/-/g, '.')} · ${n.companion || '独自漫游'}</p>
+                        </div>
+                        <div class="text-xl opacity-40 hover:opacity-80 transition-opacity">📝</div>
+                    </div>`;
+                });
+                html += `</div>`;
+            } else if(currentVaultTab === 'photos') {
+                vaultAllPhotos = [];
+                timelineNodesData.forEach(n => {
+                    if(n.photo_urls && n.photo_urls.length > 0 && n.photo_urls[0] !== "") {
+                        n.photo_urls.forEach(url => vaultAllPhotos.push({url, city: n.city, date: n.visit_date}));
+                    }
+                });
+                if(vaultAllPhotos.length === 0) {
+                    html = `<div class="text-center py-16 text-slate-400 text-sm font-serif-sc tracking-widest">暂无光影留存，多去捕捉世界的瞬间吧...</div>`;
+                } else {
+                    html = `<div class="grid grid-cols-3 md:grid-cols-5 gap-3">`;
+                    vaultAllPhotos.forEach((p, idx) => {
+                        html += `
+                        <div class="relative group aspect-square cursor-pointer overflow-hidden rounded-xl shadow-sm" onclick="openVaultGallery(${idx})">
+                            <img src="${p.url}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2 pointer-events-none">
+                                <span class="text-white text-[10px] tracking-widest truncate">${p.city}</span>
+                            </div>
+                        </div>`;
+                    });
+                    html += `</div>`;
+                }
+            } else if(currentVaultTab === 'expenses') {
+                const expenseNodes = timelineNodesData.filter(n => n.expense);
+                if(expenseNodes.length === 0) {
+                    html = `<div class="text-center py-16 text-slate-400 text-sm font-serif-sc tracking-widest">尚未收纳尘世账单，这是一场纯粹的流浪...</div>`;
+                } else {
+                    html = `<div class="space-y-4">`;
+                    expenseNodes.forEach(n => {
+                         html += `
+                        <div class="glass-panel p-5 flex justify-between items-center">
+                            <div>
+                                <h4 class="text-slate-800 font-serif-sc text-lg">${n.location_name || n.city}</h4>
+                                <p class="text-xs text-slate-400 mt-1 tracking-widest">${n.visit_date.replace(/-/g, '.')}</p>
+                            </div>
+                            <div class="text-xl font-serif-sc text-slate-700 font-medium">¥${n.expense}</div>
+                        </div>`;
+                    });
+                    html += `</div>`;
+                }
             }
             container.innerHTML = html;
             container.style.opacity = 1;
@@ -757,7 +963,20 @@
         function toggleSubView(type) {
             document.getElementById('sub-view-map').classList.toggle('hidden', type !== 'map');
             document.getElementById('sub-view-timeline').classList.toggle('hidden', type !== 'timeline');
-            if(type === 'map') setTimeout(() => { if(echartsInstance) echartsInstance.resize(); }, 50); 
+            
+            const btnMap = document.getElementById('btn-map');
+            const btnTimeline = document.getElementById('btn-timeline');
+            const activeClass = "px-6 py-2.5 text-[11px] font-medium rounded-full bg-slate-800 text-white shadow-md tracking-widest transition-all";
+            const inactiveClass = "px-6 py-2.5 text-[11px] font-medium rounded-full text-slate-500 hover:text-slate-800 tracking-widest transition-all";
+            
+            if(type === 'map') {
+                btnMap.className = activeClass; 
+                btnTimeline.className = inactiveClass;
+                setTimeout(() => { if(echartsInstance) echartsInstance.resize(); }, 50); 
+            } else {
+                btnTimeline.className = activeClass; 
+                btnMap.className = inactiveClass;
+            }
         }
 
         window.onload = function() { 
