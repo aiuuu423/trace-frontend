@@ -602,7 +602,8 @@
             setTimeout(() => document.getElementById('feedback-modal').classList.add('hidden'), 300);
         }
         async function submitFeedback() {
-            const currentCode = checkUserLogin() || '匿名漫游者';
+            // 替换为这行：直接从本地存储读取，避免触发强制登录弹窗
+            const currentCode = localStorage.getItem('trace_user_code') || '匿名漫游者';
             const type = document.getElementById('fb-type').value;
             const content = document.getElementById('fb-content').value.trim();
             if(!content) { triggerToast("吐槽内容不能为空哦"); return; }
