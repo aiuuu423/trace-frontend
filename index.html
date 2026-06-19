@@ -33,6 +33,42 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 10px; }
+        
+        /* ========================================================
+        ✨ AI 漫游向导（Dify 悬浮窗）强迫症治愈版：完美并排与换肤
+        ======================================================== */
+
+        /* 1. 启动气泡：与反馈按钮绝对水平对齐，强制统一尺寸 */
+        #dify-chatbot-bubble-button {
+            /* 严格对齐反馈按钮的 w-14 (56px) 和 bottom-8 (32px) */
+            bottom: 32px !important; 
+            right: 104px !important; /* 给原生反馈按钮留出间距并排 */
+            width: 56px !important;
+            height: 56px !important;
+            border-radius: 50% !important;
+            
+            /* 黑客滤镜：去色并压暗，强行把高饱和蓝变成高级深灰蓝 */
+            filter: grayscale(60%) brightness(0.7) !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+            transition: all 0.3s ease !important;
+        }
+
+        #dify-chatbot-bubble-button:hover {
+            filter: grayscale(60%) brightness(0.6) !important;
+            transform: scale(1.05);
+        }
+
+        /* 2. 聊天主窗口：完美弧线外壳 */
+        #dify-chatbot-bubble-frame {
+            bottom: 104px !important; 
+            right: 32px !important; 
+            border-radius: 24px !important; 
+            box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.15), 0 0 2px rgba(0, 0, 0, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.6) !important;
+            overflow: hidden !important; 
+            width: 380px !important;
+            height: 620px !important;
+        }
     </style>
 </head>
 <body class="antialiased tracking-wide">
@@ -287,7 +323,6 @@
     <script>
         const BACKEND_URL = "https://aiuu423.pythonanywhere.com"; 
         
-        // 修复 Bug 4: 全新绘制深邃极光星轨高级专属头像
         const DEFAULT_AVATAR_B64 = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230f172a'/%3E%3Cstop offset='100%25' stop-color='%23020617'/%3E%3C/linearGradient%3E%3ClinearGradient id='glow' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%233b82f6' stop-opacity='0.8'/%3E%3Cstop offset='100%25' stop-color='%238b5cf6' stop-opacity='0'/%3E%3C/linearGradient%3E%3Cfilter id='blur' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeGaussianBlur stdDeviation='2'/%3E%3C/filter%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23bg)'/%3E%3Ccircle cx='30' cy='30' r='20' fill='url(%23glow)' filter='url(%23blur)'/%3E%3Cpath d='M 10 50 Q 50 10 90 70' fill='none' stroke='rgba(255,255,255,0.2)' stroke-width='0.5' /%3E%3Cpath d='M 50 25 L 52 38 L 65 40 L 52 42 L 50 55 L 48 42 L 35 40 L 48 38 Z' fill='rgba(255,255,255,0.9)'/%3E%3Ccircle cx='70' cy='25' r='1' fill='rgba(255,255,255,0.6)'/%3E%3Ccircle cx='20' cy='65' r='1.5' fill='rgba(255,255,255,0.4)'/%3E%3Ccircle cx='80' cy='80' r='0.8' fill='rgba(255,255,255,0.3)'/%3E%3C/svg%3E";
 
         let historyStack = ['landing-view'];
@@ -297,7 +332,6 @@
         let editingNodeId = null; 
         let compressedPhotoB64Array = []; 
         
-        // 画廊全局变量
         let currentGallery = [];
         let currentGalleryIndex = 0;
         let vaultAllPhotos = []; 
@@ -334,7 +368,6 @@
             "港澳台": {"香港": [114.17, 22.28], "澳门": [113.54, 22.19], "台湾": [121.50, 25.03]}
         };
 
-        // --- 修复 Bug 3: 全局无缝画廊灯箱组件 ---
         function openNodeGallery(nodeId, startIndex) {
             const node = timelineNodesData.find(n => n.node_id === nodeId);
             if(!node) return;
@@ -389,7 +422,6 @@
             }
         }
 
-        // --- 修复 Bug 1: 优雅高阶全局弹窗 ---
         function showCustomConfirm(msg, confirmTxt, cancelTxt, onConfirm) {
             const modal = document.getElementById('custom-confirm');
             const box = document.getElementById('custom-confirm-box');
@@ -410,7 +442,6 @@
             };
         }
 
-        // --- 初始化与免密认证 ---
         function initDropdowns() {
             const provSelect = document.getElementById('form-province');
             for (let prov in geoProvinceCityLib) {
@@ -429,7 +460,6 @@
             }
         }
 
-        // 修复 Bug 5 & 4: 初始化用户状态与默认头像
         function checkUserLogin() {
             const code = localStorage.getItem('trace_user_code');
             const avatar = localStorage.getItem('trace_user_avatar') || DEFAULT_AVATAR_B64;
@@ -483,7 +513,6 @@
             });
         }
 
-        // --- 核心业务 API (增删改查) ---
         async function loadDataFromDatabase() {
             const currentCode = checkUserLogin();
             if(!currentCode) return;
@@ -588,7 +617,6 @@
             document.getElementById('photo-preview-box').innerHTML = '';
         }
 
-        // --- 照片与头像处理 ---
         function processPhotos(event) {
             const files = event.target.files;
             for (let file of files) {
@@ -652,7 +680,6 @@
             reader.readAsDataURL(file);
         }
 
-        // --- ECharts 地图下钻逻辑 ---
         function renderPolygonEchartsMap() {
             const uniqueCities = [...new Set(timelineNodesData.map(n => n.city))];
             const illuminatedProvinces = new Set();
@@ -706,7 +733,6 @@
             setTimeout(() => { echartsInstance.resize(); }, 100);
         }
 
-        // --- 飞书反馈系统 (Drawer) ---
         function openFeedback() {
             document.getElementById('feedback-modal').classList.remove('hidden');
             setTimeout(() => {
@@ -738,7 +764,6 @@
             } catch(e) { triggerToast("呼叫星空监测站失败，请检查信号"); }
         }
 
-        // --- 抽屉展示与辅助工具 ---
         function getProvinceByExactCity(cityName) {
             for(let prov in geoProvinceCityLib) { if(geoProvinceCityLib[prov][cityName]) return prov; } return null;
         }
@@ -984,38 +1009,15 @@
             if(checkUserLogin()) loadDataFromDatabase(); 
         }
     </script>
-<script>
-    window.difyChatbotConfig = {
-     token: 'MJTTqRDx63CBD1L8',
-     inputs: {
-       // You can define the inputs from the Start node here
-       // key is the variable name
-       // e.g.
-       // name: "NAME"
-     },
-     systemVariables: {
-       // user_id: 'YOU CAN DEFINE USER ID HERE',
-       // conversation_id: 'YOU CAN DEFINE CONVERSATION ID HERE, IT MUST BE A VALID UUID',
-     },
-     userVariables: {
-       // avatar_url: 'YOU CAN DEFINE USER AVATAR URL HERE',
-       // name: 'YOU CAN DEFINE USER NAME HERE',
-     },
-    }
-   </script>
-   <script
-    src="https://udify.app/embed.min.js"
-    id="MJTTqRDx63CBD1L8"
-    defer>
-   </script>
-   <style>
-     #dify-chatbot-bubble-button {
-       background-color: #1C64F2 !important;
-     }
-     #dify-chatbot-bubble-window {
-       width: 24rem !important;
-       height: 40rem !important;
-     }
-   </style>
+    
+    <script>
+        window.difyChatbotConfig = {
+            token: 'MJTTqRDx63CBD1L8',
+            inputs: {},
+            systemVariables: {},
+            userVariables: {}
+        }
+    </script>
+    <script src="https://cloud.dify.ai/embed.min.js" id="MJTTqRDx63CBD1L8" defer></script>
 </body>
 </html>
