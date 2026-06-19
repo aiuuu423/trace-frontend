@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>行迹 | Trace V1.2</title>
+    <link rel="preconnect" href="https://cloud.dify.ai" crossorigin>
+    <link rel="dns-prefetch" href="https://cloud.dify.ai">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script defer src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
@@ -35,31 +37,30 @@
         ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 10px; }
         
         /* ========================================================
-        ✨ AI 漫游向导（Dify 悬浮窗）强迫症治愈版：完美并排与换肤
+        ✨ AI 漫游向导 终极防遮挡与高定 UI
         ======================================================== */
 
-        /* 1. 启动气泡：与反馈按钮绝对水平对齐，强制统一尺寸 */
         #dify-chatbot-bubble-button {
-            /* 严格对齐反馈按钮的 w-14 (56px) 和 bottom-8 (32px) */
             bottom: 32px !important; 
-            right: 104px !important; /* 给原生反馈按钮留出间距并排 */
+            right: 104px !important; 
             width: 56px !important;
             height: 56px !important;
             border-radius: 50% !important;
-            
-            /* 黑客滤镜：去色并压暗，强行把高饱和蓝变成高级深灰蓝 */
             filter: grayscale(60%) brightness(0.7) !important;
+            -webkit-filter: grayscale(60%) brightness(0.7) !important;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
             transition: all 0.3s ease !important;
+            z-index: 8900 !important;
         }
 
         #dify-chatbot-bubble-button:hover {
             filter: grayscale(60%) brightness(0.6) !important;
+            -webkit-filter: grayscale(60%) brightness(0.6) !important;
             transform: scale(1.05);
         }
 
-        /* 2. 聊天主窗口：完美弧线外壳 */
-        #dify-chatbot-bubble-frame {
+        /* 🚨 核心修复：Dify 的真名是 window！ */
+        #dify-chatbot-bubble-window {
             bottom: 104px !important; 
             right: 32px !important; 
             border-radius: 24px !important; 
@@ -68,36 +69,18 @@
             overflow: hidden !important; 
             width: 380px !important;
             height: 620px !important;
-        }
-        /* ========================================================
-           📱 移动端与跨平台内核（安卓/iOS）极致兼容性适配补丁
-           ======================================================== */
-
-        /* 1. 为苹果 Webkit 内核追加独有的滤镜前缀，防止气泡隐形 */
-        #dify-chatbot-bubble-button {
-            -webkit-filter: grayscale(60%) brightness(0.7) !important; /* 锁死苹果内核兼容 */
+            z-index: 8901 !important;
         }
 
-        /* 2. 当屏幕宽度小于 768px 时（手机和平板纵向状态），自动切换为“轻量化省电模式” */
         @media (max-width: 768px) {
-            /* 🚀 性能彻底释放：关掉高能耗的背景动画，将模糊半径减半，安卓瞬间丝滑 */
-            .mesh-blob {
-                animation: none !important; /* 冻结动画，让气泡静止，CPU 占用率直降 90% */
-                filter: blur(50px) !important; /* 降低模糊半径，减轻手机 GPU 渲染负荷 */
-            }
-
-            /* 📐 移动端空间缩配：防止 380px 的大聊天框撑破手机屏幕 */
-            #dify-chatbot-bubble-frame {
-                width: 88vw !important;  /* 宽度自适应手机屏幕 */
-                height: 65vh !important; /* 高度等比例收缩，给手机留出呼吸感 */
+            .mesh-blob { animation: none !important; filter: blur(50px) !important; }
+            #dify-chatbot-bubble-window {
+                width: 88vw !important;  
+                height: 65vh !important; 
                 bottom: 96px !important; 
                 right: 6vw !important;
             }
-
-            #dify-chatbot-bubble-button {
-                bottom: 24px !important;
-                right: 84px !important; /* 稍微往右回靠一点，适配小屏幕握持 */
-            }
+            #dify-chatbot-bubble-button { bottom: 24px !important; right: 84px !important; }
         }
     </style>
 </head>
@@ -105,6 +88,12 @@
 
     <div class="mesh-bg-container" id="parallax-bg">
         <div class="mesh-blob blob-1"></div><div class="mesh-blob blob-2"></div><div class="mesh-blob blob-3"></div>
+    </div>
+
+    <div id="sync-overlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[20000] hidden flex-col items-center justify-center transition-all">
+        <div class="animate-spin text-5xl mb-4">🪐</div>
+        <p class="text-white text-sm tracking-[0.2em] font-light">正在跨越星海同步您的漫游记忆...</p>
+        <p class="text-white/50 text-[10px] tracking-widest mt-3">光影数据庞大，请耐心等待片刻</p>
     </div>
 
     <div id="auth-overlay" class="fixed inset-0 bg-slate-900/10 backdrop-blur-md z-[10000] flex items-center justify-center hidden transition-all duration-700">
@@ -546,6 +535,13 @@
         async function loadDataFromDatabase() {
             const currentCode = checkUserLogin();
             if(!currentCode) return;
+            
+            const syncOverlay = document.getElementById('sync-overlay');
+            if(syncOverlay) {
+                syncOverlay.classList.remove('hidden');
+                syncOverlay.classList.add('flex'); 
+            }
+
             const timestamp = new Date().getTime(); 
             try {
                 const res = await fetch(`${BACKEND_URL}/api/get_nodes?user_code=${encodeURIComponent(currentCode)}&t=${timestamp}`);
@@ -557,7 +553,14 @@
                     updateVaultStats(); 
                     renderVaultTabContent();
                 }
-            } catch (e) { console.log(e); }
+            } catch (e) { 
+                console.log(e); 
+            } finally {
+                if(syncOverlay) {
+                    syncOverlay.classList.add('hidden');
+                    syncOverlay.classList.remove('flex');
+                }
+            }
         }
 
         async function handleFormSubmit(event) {
@@ -656,12 +659,12 @@
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
                         let width = img.width, height = img.height;
-                        const MAX_WIDTH = 800;
+                        const MAX_WIDTH = 400; 
                         if (width > MAX_WIDTH) { height = Math.round((height * MAX_WIDTH) / width); width = MAX_WIDTH; }
                         canvas.width = width; canvas.height = height;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
-                        compressedPhotoB64Array.push(canvas.toDataURL('image/jpeg', 0.6));
+                        compressedPhotoB64Array.push(canvas.toDataURL('image/jpeg', 0.2)); 
                         renderPhotoPreviewEditor();
                     };
                     img.src = e.target.result;
@@ -1034,10 +1037,10 @@
             }
         }
 
-        window.onload = function() { 
+        document.addEventListener('DOMContentLoaded', function() {
             initDropdowns(); 
             if(checkUserLogin()) loadDataFromDatabase(); 
-        }
+        });
     </script>
     
     <script>
@@ -1046,8 +1049,8 @@
             inputs: {},
             systemVariables: {},
             userVariables: {}
-        }
+        };
     </script>
-    <script src="https://udify.app/embed.min.js" id="MJTTqRDx63CBD1L8" defer></script>
+    <script src="https://cloud.dify.ai/embed.min.js" id="MJTTqRDx63CBD1L8" defer></script>
 </body>
 </html>
