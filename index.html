@@ -7,14 +7,17 @@
     <link rel="preconnect" href="https://cloud.dify.ai" crossorigin>
     <link rel="dns-prefetch" href="https://cloud.dify.ai">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-    
+
+    <script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    
     <style>
         /* 深度定制，完美融入玻璃态 UI，像素级对齐原生输入框高度 */
         .ts-wrapper .ts-control { 
@@ -43,6 +46,8 @@
     <script src="https://cdn.jsdelivr.net/npm/exifr/dist/full.umd.js"></script>
     
     <style>
+        /* 🚨 精准修复：仅对页面主体容器赋予最高隐藏权重，不误伤顶部导航栏等响应式组件 */
+        .view-section.hidden { display: none !important; }          
         body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif; overflow-x: hidden; background-color: #eef2f6; color: #334155; margin: 0; }
         .font-serif-sc { font-family: 'Noto Serif SC', serif; }
         
@@ -105,13 +110,21 @@
 
         @media (max-width: 768px) {
             .mesh-blob { animation: none !important; filter: blur(50px) !important; }
-            #dify-chatbot-bubble-window {
-                width: 88vw !important;  
-                height: 65vh !important; 
-                bottom: 96px !important; 
-                right: 6vw !important;
+            /* 🚀 Dify 机器人天际线归位 (右上角) */
+            #dify-chatbot-bubble-button { 
+                top: 24px !important; 
+                right: 24px !important; 
+                bottom: auto !important; 
+                transform: scale(0.85); 
+                box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
             }
-            #dify-chatbot-bubble-button { bottom: 24px !important; right: 84px !important; }
+            #dify-chatbot-bubble-window {
+                width: 90vw !important;  
+                height: 80dvh !important; 
+                top: 90px !important; 
+                right: 5vw !important;
+                bottom: auto !important;
+            }
         }
     </style>
 </head>
@@ -179,7 +192,7 @@
         </div>
     </div>
 
-    <div id="detail-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[10000] hidden flex justify-end transition-opacity duration-300 opacity-0">
+    <div id="detail-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[15000] hidden flex justify-end transition-opacity duration-300 opacity-0">
         <div class="w-full md:w-[500px] bg-[#f8fafc] h-full shadow-2xl overflow-y-auto transform translate-x-full transition-transform duration-300" id="detail-drawer">
             <div class="px-8 py-6 border-b border-slate-200 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-10">
                 <h3 class="text-xl font-serif-sc text-slate-800 tracking-wider" id="detail-modal-title">漫游录</h3>
@@ -207,7 +220,26 @@
         </div>
     </div>
 
-    <header class="w-full px-8 md:px-12 py-8 flex justify-between items-center fixed top-0 z-40">
+    <div id="mobile-capsule-nav" class="flex md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/70 backdrop-blur-2xl border border-white/50 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.15)] rounded-full px-6 py-3 items-center justify-between w-[92vw] max-w-[400px] z-[9999] transition-all duration-300" style="padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));">
+        <button onclick="switchView('dashboard-view'); toggleSubView('map');" class="flex flex-col items-center gap-1 text-slate-800 w-14">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418"></path></svg>
+            <span class="text-[10px] tracking-[0.1em] font-medium mt-0.5">地球大盘</span>
+        </button>
+        <button onclick="switchView('dashboard-view'); toggleSubView('timeline');" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-800 transition-colors w-14">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span class="text-[10px] tracking-[0.1em] font-medium mt-0.5">时间之轨</span>
+        </button>
+        <button onclick="openMobileRecordSheet()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-800 transition-colors w-14">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path></svg>
+            <span class="text-[10px] tracking-[0.1em] font-medium mt-0.5">刻录足迹</span>
+        </button>
+        <button onclick="openVaultDrawer()" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-800 transition-colors w-14">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12"></path></svg>
+            <span class="text-[10px] tracking-[0.1em] font-medium mt-0.5">漫游主仓</span>
+        </button>
+    </div>
+
+    <header class="hidden md:flex w-full px-8 md:px-12 py-8 justify-between items-center fixed top-0 z-40">
         <div class="flex items-center gap-6">
             <div class="text-2xl font-serif-sc font-normal tracking-[0.2em] text-slate-800 cursor-pointer drop-shadow-sm" onclick="switchView('landing-view')">行迹</div>
             <button id="global-back-btn" onclick="goBack()" class="hidden px-5 py-2.5 rounded-full glass-btn text-xs font-normal tracking-widest">← 返回</button>
@@ -243,8 +275,9 @@
         </div>
     </section>
 
-    <section id="record-view" class="view-section hidden relative z-10 min-h-screen flex justify-center items-center px-4 py-32">
+    <section id="record-view" class="view-section hidden md:flex fixed md:relative z-[10001] md:z-10 bottom-0 md:bottom-auto left-0 md:left-auto w-full md:w-auto h-[90dvh] md:min-h-screen bg-[#f8fafc] md:bg-transparent rounded-t-[2.5rem] md:rounded-t-none translate-y-full md:translate-y-0 transition-transform duration-500 justify-center items-start md:items-center px-4 py-8 md:py-32 shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.1)] md:shadow-none overflow-y-auto md:overflow-visible">
         <div class="w-full max-w-[850px] glass-panel p-8 md:p-12 space-y-10 relative">
+            <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 md:hidden"></div>
             <h2 id="form-title" class="text-2xl font-serif-sc font-normal text-slate-800 tracking-[0.15em] border-b border-slate-200/50 pb-6">刻录新行迹</h2>
             <form class="space-y-8" id="trace-form" onsubmit="handleFormSubmit(event)">
                 <div class="flex justify-center mb-6">
@@ -305,16 +338,16 @@
 
                 <div class="pt-4 flex gap-4">
                     <button type="submit" class="flex-1 py-4 bg-[#1e293b] text-white font-normal rounded-2xl shadow-xl hover:bg-slate-700 hover:-translate-y-1 transition-all tracking-widest text-sm">铭刻入库</button>
-                    <button type="button" onclick="goBack()" class="py-4 px-8 bg-white/80 text-slate-600 font-normal rounded-2xl hover:bg-white transition-all tracking-widest text-sm border border-slate-200 shadow-sm">暂且搁置</button>
+                    <button type="button" onclick="closeMobileRecordSheet()" class="py-4 px-8 bg-white/80 text-slate-600 font-normal rounded-2xl hover:bg-white transition-all tracking-widest text-sm border border-slate-200 shadow-sm">暂且搁置</button>
                 </div>
             </form>
         </div>
     </section>
 
     <section id="dashboard-view" class="view-section hidden relative z-10 min-h-screen px-4 md:px-12 py-28 flex flex-col">
-        <div class="w-full max-w-6xl mx-auto flex justify-between items-center mb-10">
-            <h2 class="text-2xl font-serif-sc font-normal text-slate-800 tracking-[0.2em]">漫游记忆大盘</h2>
-            <div class="flex p-1 glass-panel rounded-full" style="box-shadow: none;">
+        <div class="w-full max-w-6xl mx-auto flex justify-center md:justify-between items-center mb-8 md:mb-10 text-center relative">
+            <h2 id="dashboard-mobile-title" class="text-2xl font-serif-sc font-normal text-slate-800 tracking-[0.2em] transition-all">漫游记忆大盘</h2>
+            <div class="hidden md:flex p-1 glass-panel rounded-full" style="box-shadow: none;">
                 <button id="btn-map" onclick="toggleSubView('map')" class="px-6 py-2.5 text-[11px] font-medium rounded-full bg-slate-800 text-white shadow-md tracking-widest transition-all">星图视角</button>
                 <button id="btn-timeline" onclick="toggleSubView('timeline')" class="px-6 py-2.5 text-[11px] font-medium rounded-full text-slate-500 hover:text-slate-800 tracking-widest transition-all">时间之轨</button>
             </div>
@@ -335,9 +368,6 @@
                 </div>
                 
                 <div id="leaflet-map-container" class="w-full h-full rounded-[1.8rem] z-[1]"></div>
-            </div>
-                
-                <div id="leaflet-map-container" class="w-full h-full rounded-[1.8rem] z-[1]"></div>
 
                 <div id="globe-3d-viewport" class="hidden absolute inset-0 bg-[#0b0f19] flex flex-col items-center justify-center rounded-[1.8rem] overflow-hidden z-20">
                     <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px]"></div>
@@ -346,47 +376,57 @@
                 </div>
             </div>
             <div id="sub-view-timeline" class="hidden w-full max-w-5xl mx-auto relative py-12">
-                <div class="absolute left-8 md:left-[22%] top-0 bottom-0 w-[2px] bg-blue-200/50 rounded-full"></div>
+                <div class="absolute left-[28%] md:left-[22%] top-0 bottom-0 w-[2px] bg-blue-200/50 rounded-full"></div>
                 <div id="timeline-container" class="pt-4"></div>
             </div>
         </div>
     </section>
 
-    <section id="vault-view" class="view-section hidden relative z-10 min-h-screen pb-24">
-        <div class="w-full h-64 bg-transparent relative overflow-hidden"></div>
-        <div class="max-w-5xl mx-auto px-4 -mt-40 relative z-20 space-y-12">
-            <div class="flex flex-col items-center gap-6 px-4">
+    <section id="vault-view" class="view-section hidden md:block fixed md:relative z-[10002] md:z-10 inset-0 md:inset-auto w-full md:w-auto h-[100dvh] md:min-h-screen bg-[#f8fafc] md:bg-transparent md:backdrop-blur-none md:border-none md:shadow-none translate-y-full md:translate-y-0 md:translate-x-0 transition-transform duration-500 overflow-y-auto pb-24 md:pb-24">
+        <button onclick="closeVaultDrawer()" class="md:hidden absolute top-6 left-6 text-3xl text-slate-400 hover:text-slate-800 z-50">&times;</button>
+        
+        <div class="w-full h-16 md:h-64 bg-transparent relative overflow-hidden"></div>
+        <div class="max-w-5xl mx-auto px-6 md:px-4 md:-mt-40 relative z-20 space-y-8 md:space-y-12">
+            
+            <div class="flex flex-col items-center gap-4 px-4">
                 <div class="relative group/vaultAvatar cursor-pointer" onclick="document.getElementById('avatar-upload').click()" title="点击焕新星空面容">
-                    <img id="vault-avatar" src="" class="w-24 h-24 rounded-full border-4 border-white shadow-xl object-cover bg-slate-900">
+                    <img id="vault-avatar" src="" class="w-20 h-20 md:w-24 md:h-24 rounded-full border-[3px] border-white shadow-xl object-cover bg-slate-900">
                     <div class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover/vaultAvatar:opacity-100 transition-opacity duration-300">
                         <span class="text-white text-xs tracking-widest">焕新面容</span>
                     </div>
                 </div>
-                <h2 class="text-2xl font-serif-sc font-normal text-slate-800 tracking-[0.2em]" id="vault-user-title">Trace 主仓</h2>
+                <h2 class="text-xl md:text-2xl font-serif-sc font-normal text-slate-800 tracking-[0.2em]" id="vault-user-title">Trace 主仓</h2>
             </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-5 px-2">
-                <div onclick="switchVaultTab('cities')" id="tab-cities" class="vault-tab active glass-panel p-8 text-center cursor-pointer">
-                    <p id="vault-city-stat" class="text-4xl font-light text-slate-800 font-serif-sc tracking-tight">0</p>
-                    <p class="text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] mt-3">漫游城市</p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5 px-2">
+                <div onclick="switchVaultTab('cities')" id="tab-cities" class="vault-tab active glass-panel p-6 md:p-8 text-center cursor-pointer">
+                    <p id="vault-city-stat" class="text-3xl md:text-4xl font-light text-slate-800 font-serif-sc tracking-tight">0</p>
+                    <p class="text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] mt-2 md:mt-3">漫游城市</p>
                 </div>
-                <div onclick="switchVaultTab('nodes')" id="tab-nodes" class="vault-tab glass-panel p-8 text-center cursor-pointer">
-                    <p id="vault-node-stat" class="text-4xl font-light text-slate-800 font-serif-sc tracking-tight">0</p>
-                    <p class="text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] mt-3">行迹刻度</p>
+                <div onclick="switchVaultTab('nodes')" id="tab-nodes" class="vault-tab glass-panel p-6 md:p-8 text-center cursor-pointer">
+                    <p id="vault-node-stat" class="text-3xl md:text-4xl font-light text-slate-800 font-serif-sc tracking-tight">0</p>
+                    <p class="text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] mt-2 md:mt-3">行迹刻度</p>
                 </div>
-                <div onclick="switchVaultTab('photos')" id="tab-photos" class="vault-tab glass-panel p-8 text-center cursor-pointer">
-                    <p id="vault-photo-stat" class="text-4xl font-light text-slate-800 font-serif-sc tracking-tight">0</p>
-                    <p class="text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] mt-3">影像档案</p>
+                <div onclick="switchVaultTab('photos')" id="tab-photos" class="vault-tab glass-panel p-6 md:p-8 text-center cursor-pointer">
+                    <p id="vault-photo-stat" class="text-3xl md:text-4xl font-light text-slate-800 font-serif-sc tracking-tight">0</p>
+                    <p class="text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] mt-2 md:mt-3">影像档案</p>
                 </div>
-                <div onclick="switchVaultTab('expenses')" id="tab-expenses" class="vault-tab glass-panel p-8 text-center cursor-pointer">
-                    <p id="vault-expense-stat" class="text-4xl font-light text-slate-800 font-serif-sc tracking-tight">¥0</p>
-                    <p class="text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] mt-3">总计开销</p>
+                <div onclick="switchVaultTab('expenses')" id="tab-expenses" class="vault-tab glass-panel p-6 md:p-8 text-center cursor-pointer">
+                    <p id="vault-expense-stat" class="text-3xl md:text-4xl font-light text-slate-800 font-serif-sc tracking-tight">¥0</p>
+                    <p class="text-[10px] font-medium text-slate-400 uppercase tracking-[0.2em] mt-2 md:mt-3">总计开销</p>
                 </div>
             </div>
-            <div class="glass-panel p-10 min-h-[40vh] border border-white shadow-xl">
+            
+            <div class="glass-panel p-6 md:p-10 min-h-[40vh] border border-white shadow-xl">
                 <div id="vault-content-dynamic" class="transition-opacity duration-500"></div>
             </div>
+
+            <div class="md:hidden pt-4 border-t border-slate-200/50 space-y-3 pb-8">
+                <button onclick="openFeedback()" class="w-full py-4 glass-btn rounded-2xl flex items-center justify-center gap-3 text-slate-700 text-sm tracking-widest"><span class="text-lg">💬</span> 星空回音站</button>
+                <button onclick="logout()" class="w-full py-4 bg-red-50 text-red-500 border border-red-100 rounded-2xl flex items-center justify-center gap-3 text-sm tracking-widest shadow-sm hover:bg-red-100 transition-all"><span class="text-lg">🚪</span> 退出漫游</button>
+            </div>
         </div>
-    </section>
+    </section> 
 
     <script>
         const BACKEND_URL = "https://aiuu423.pythonanywhere.com"; 
@@ -394,6 +434,9 @@
         const DEFAULT_AVATAR_B64 = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230f172a'/%3E%3Cstop offset='100%25' stop-color='%23020617'/%3E%3C/linearGradient%3E%3ClinearGradient id='glow' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%233b82f6' stop-opacity='0.8'/%3E%3Cstop offset='100%25' stop-color='%238b5cf6' stop-opacity='0'/%3E%3C/linearGradient%3E%3Cfilter id='blur' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeGaussianBlur stdDeviation='2'/%3E%3C/filter%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='50' fill='url(%23bg)'/%3E%3Ccircle cx='30' cy='30' r='20' fill='url(%23glow)' filter='url(%23blur)'/%3E%3Cpath d='M 10 50 Q 50 10 90 70' fill='none' stroke='rgba(255,255,255,0.2)' stroke-width='0.5' /%3E%3Cpath d='M 50 25 L 52 38 L 65 40 L 52 42 L 50 55 L 48 42 L 35 40 L 48 38 Z' fill='rgba(255,255,255,0.9)'/%3E%3Ccircle cx='70' cy='25' r='1' fill='rgba(255,255,255,0.6)'/%3E%3Ccircle cx='20' cy='65' r='1.5' fill='rgba(255,255,255,0.4)'/%3E%3Ccircle cx='80' cy='80' r='0.8' fill='rgba(255,255,255,0.3)'/%3E%3C/svg%3E";
 
         let historyStack = ['landing-view'];
+        // 🚨 增长体系状态机：记录是否为游客模式，并开辟半路提交数据暂存舱
+        let isGuestMode = false;
+        let pendingTraceData = null;
         let timelineNodesData = []; 
         let echartsInstance = null;
         let currentVaultTab = 'cities'; 
@@ -631,11 +674,18 @@
         function checkUserLogin() {
             const code = localStorage.getItem('trace_user_code');
             const avatar = localStorage.getItem('trace_user_avatar') || DEFAULT_AVATAR_B64;
+            
             if (!code) {
-                document.getElementById('auth-overlay').classList.remove('hidden');
-                document.getElementById('user-badge').innerText = "未契入星空";
-                return false;
+                // 🚨 核心改动：未登录时不再硬性弹窗阻断，隐式切入沙箱体验模式
+                isGuestMode = true;
+                document.getElementById('user-badge').innerText = "🌟 星空观测者 (体验模式)";
+                document.getElementById('vault-user-title').innerText = "🌟 星空观测者 (体验模式)";
+                document.getElementById('nav-avatar').src = avatar;
+                document.getElementById('vault-avatar').src = avatar;
+                return 'demo_explorer'; // 隐式向后端返回官方演示账号，拉取满天星样板大盘
             }
+            
+            isGuestMode = false;
             document.getElementById('user-badge').innerText = `${code} 的漫游仓`;
             document.getElementById('vault-user-title').innerText = `${code} 的漫游仓`;
             document.getElementById('nav-avatar').src = avatar;
@@ -662,13 +712,60 @@
                     else if(type === 'register') localStorage.setItem('trace_user_avatar', DEFAULT_AVATAR_B64);
                     
                     document.getElementById('auth-overlay').classList.add('hidden');
-                    checkUserLogin();
-                    loadDataFromDatabase();
-                    triggerToast(type === 'login' ? "✨ 欢迎重返星空" : "✨ 新空域已开辟");
+                    checkUserLogin(); 
+                    
+                    // 🚨 核心 PLG 转换点：检测是否有刚才填了一半的数据？
+                    if (pendingTraceData) {
+                        triggerToast("✨ 契入成功！正在为您自动铭刻刚刚保留的记忆...");
+                        
+                        let lat = null; let lon = null;
+                        if (pendingTraceData.formMode === 'domestic') {
+                            if (geoProvinceCityLib[pendingTraceData.province] && geoProvinceCityLib[pendingTraceData.province][pendingTraceData.city]) {
+                                const coords = geoProvinceCityLib[pendingTraceData.province][pendingTraceData.city];
+                                lon = coords[0]; lat = coords[1];
+                            }
+                        } else {
+                            try {
+                                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&city=${encodeURIComponent(pendingTraceData.city)}&country=${encodeURIComponent(pendingTraceData.province)}&limit=1`);
+                                const data = await res.json();
+                                if (data && data.length > 0) {
+                                    lat = parseFloat(data[0].lat); lon = parseFloat(data[0].lon);
+                                }
+                            } catch(e) { console.warn(e); }
+                        }
+
+                        const autoPayload = {
+                            user_code: code,
+                            visit_date: pendingTraceData.visit_date,
+                            city: pendingTraceData.city,
+                            visit_time: pendingTraceData.visit_time,
+                            location_name: pendingTraceData.location_name,
+                            companion: pendingTraceData.companion,
+                            expense: pendingTraceData.expense,
+                            diary_text: pendingTraceData.diary_text,
+                            photo_urls: pendingTraceData.photo_urls,
+                            latitude: lat, longitude: lon
+                        };
+
+                        fetch(`${BACKEND_URL}/api/add_node`, {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(autoPayload)
+                        }).then(autoRes => {
+                            if (autoRes.ok) {
+                                triggerToast("🚀 丝滑归仓！您的第一条记忆已完美自动铭刻成功");
+                                resetForm();
+                                pendingTraceData = null; 
+                                loadDataFromDatabase();  
+                            }
+                        });
+                    } else {
+                        loadDataFromDatabase();
+                        triggerToast(type === 'login' ? "✨ 欢迎重返星空" : "✨ 新空域已开辟");
+                    }
                 } else {
                     triggerToast(resData.message); 
                 }
             } catch (e) {
+                // 🚨 就是这里！如果上一步替换时不小心删掉了这三行，整个 JS 就会崩溃
                 triggerToast("信号丢失，请确认星空监测站已唤醒");
             }
         }
@@ -715,11 +812,32 @@
         async function handleFormSubmit(event) {
             event.preventDefault();
             const currentCode = checkUserLogin();
-            if(!currentCode) return;
 
-            // 锁定按钮，防止重复提交
             const submitBtn = event.target.querySelector('button[type="submit"]');
             const originalBtnText = submitBtn.innerText;
+
+            // 🚨 终极柔性拦截机制
+            if (isGuestMode) {
+                // 1. 抓取当前表单填写的全部尘世记忆，甚至包括已经压缩好的 Base64 照片流，完美封存进内存沙箱
+                pendingTraceData = {
+                    visit_date: document.getElementById('form-date').value,
+                    city: document.getElementById('form-city').value, 
+                    visit_time: document.getElementById('form-time').value,
+                    location_name: document.getElementById('form-location').value,
+                    companion: document.getElementById('form-companion').value,
+                    expense: parseFloat(document.getElementById('form-expense').value) || null,
+                    diary_text: document.getElementById('form-diary').value,
+                    photo_urls: compressedPhotoB64Array.join('|||'),
+                    formMode: formMode, // 额外打包当前处于[华夏]还是[环球]模式
+                    province: document.getElementById('form-province').value
+                };
+                
+                // 2. 平滑唤醒毛玻璃认证界面，绝不生硬
+                document.getElementById('auth-overlay').classList.remove('hidden');
+                triggerToast("🔮 观测舱体验完毕！请契入漫游仓以自动保存并铭刻此行迹");
+                return;
+            }
+
             submitBtn.innerText = "🛰️ 正在定位星空坐标...";
             submitBtn.disabled = true;
             submitBtn.classList.add('opacity-70', 'cursor-not-allowed');
@@ -730,27 +848,19 @@
                 const selectedCity = document.getElementById('form-city').value;
                 const selectedProv = document.getElementById('form-province').value;
 
-                // 核心逻辑：获取经纬度
                 if (formMode === 'domestic') {
-                    // 国内直接从本地字典取
                     if (geoProvinceCityLib[selectedProv] && geoProvinceCityLib[selectedProv][selectedCity]) {
                         const coords = geoProvinceCityLib[selectedProv][selectedCity];
-                        lon = coords[0];
-                        lat = coords[1];
+                        lon = coords[0]; lat = coords[1];
                     }
                 } else if (formMode === 'global') {
-                    // 海外调用免费开源地理接口 (OSM Nominatim)
                     try {
-                        // 使用 city + country 提高精度
                         const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&city=${encodeURIComponent(selectedCity)}&country=${encodeURIComponent(selectedProv)}&limit=1`);
                         const data = await res.json();
                         if (data && data.length > 0) {
-                            lat = parseFloat(data[0].lat);
-                            lon = parseFloat(data[0].lon);
+                            lat = parseFloat(data[0].lat); lon = parseFloat(data[0].lon);
                         }
-                    } catch(e) {
-                        console.warn("海外坐标解析失败，将使用默认属性", e);
-                    }
+                    } catch(e) { console.warn(e); }
                 }
 
                 const payload = {
@@ -763,8 +873,7 @@
                     expense: parseFloat(document.getElementById('form-expense').value) || null,
                     diary_text: document.getElementById('form-diary').value,
                     photo_urls: compressedPhotoB64Array.join('|||'),
-                    latitude: lat,
-                    longitude: lon
+                    latitude: lat, longitude: lon
                 };
 
                 const url = editingNodeId ? `${BACKEND_URL}/api/update_node` : `${BACKEND_URL}/api/add_node`;
@@ -784,7 +893,6 @@
             } catch (error) { 
                 triggerToast("铭刻失败，星空网络中断"); 
             } finally {
-                // 无论成功失败，恢复按钮状态
                 submitBtn.innerText = originalBtnText;
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('opacity-70', 'cursor-not-allowed');
@@ -792,6 +900,7 @@
         }
 
         async function deleteNode(nodeId) {
+            if (isGuestMode) { triggerToast("🔒 观测者无法修改他人的星轨，请先开辟专属空域"); document.getElementById('auth-overlay').classList.remove('hidden'); return; }
             showCustomConfirm("这段记忆将化作星尘永远消散，<br>确定要擦除吗？", "化作星尘", "留存记忆", async () => {
                 const currentCode = localStorage.getItem('trace_user_code');
                 try {
@@ -809,6 +918,7 @@
         }
 
         function editNode(nodeId) {
+            if (isGuestMode) { triggerToast("🔒 观测者无法修改他人的星轨，请先开辟专属空域"); document.getElementById('auth-overlay').classList.remove('hidden'); return; }
             const node = timelineNodesData.find(n => n.node_id === nodeId);
             if(!node) return;
             editingNodeId = nodeId;
@@ -826,11 +936,31 @@
             document.getElementById('form-expense').value = node.expense || '';
             document.getElementById('form-diary').value = node.diary_text || '';
             
-            compressedPhotoB64Array = [...node.photo_urls];
+            // 兼容性修复：确保老数据即使没有照片也不会报错
+            compressedPhotoB64Array = node.photo_urls ? [...node.photo_urls] : [];
             renderPhotoPreviewEditor();
             
             closeDetailModal();
-            switchView('record-view');
+            
+            // 🚀 核心修复：移动端与 PC 端表单呼出引擎的分离
+            if (window.innerWidth < 768) {
+                // 1. 如果是从漫游主仓里点击的编辑，先将主仓平滑收起，防止层级遮挡表单
+                const vault = document.getElementById('vault-view');
+                if (vault && !vault.classList.contains('hidden')) {
+                    closeVaultDrawer();
+                }
+                
+                // 2. 物理拉起底部的表单抽屉，而不是粗暴地切换视图
+                const sheet = document.getElementById('record-view');
+                sheet.classList.remove('hidden');
+                requestAnimationFrame(() => sheet.classList.remove('translate-y-full'));
+                
+                // 视觉补偿：如果地图在底层，微微上滑露出键盘热区
+                if(leafletMap) leafletMap.panBy([0, 100], {animate: true});
+            } else {
+                // PC 端保持原本的整页视图切换逻辑
+                switchView('record-view');
+            }
         }
 
         function openRecordView() {
@@ -971,6 +1101,7 @@
 
 
         async function uploadAvatar(event) {
+            if (isGuestMode) { triggerToast("🔒 观测者无法更改面容，请先开辟专属空域"); document.getElementById('auth-overlay').classList.remove('hidden'); return; }
             const file = event.target.files[0];
             if(!file) return;
             triggerToast("✨ 正在萃取影像，为您焕新专属面容...");
@@ -1037,15 +1168,64 @@
 
             if (markerClusterGroup) { leafletMap.removeLayer(markerClusterGroup); }
             
+            // 1. 初始化高级聚合组
             markerClusterGroup = L.markerClusterGroup({
-                showCoverageOnHover: false, maxClusterRadius: 55,
+                showCoverageOnHover: false, 
+                maxClusterRadius: 45, 
+                spiderfyOnMaxZoom: true,
+                zoomToBoundsOnClick: true,
+                
+                // 🚨 核心修复 1：扩大分裂半径，防止大照片互相拥挤重叠
+                spiderfyDistanceMultiplier: 1.8, 
+                
+                // 🚨 核心修复 2：将默认的粗黑蜘蛛连线改为高级的极细冷灰 UI 连线
+                spiderLegPolylineOptions: { weight: 1.5, color: '#94a3b8', opacity: 0.6 }, 
+                
                 iconCreateFunction: function(cluster) {
-                    return L.divIcon({ 
-                        html: `<div class="bg-blue-600/95 text-white w-10 h-10 flex items-center justify-center rounded-full border-[3px] border-white shadow-xl font-bold font-sans transition-transform hover:scale-110">${cluster.getChildCount()}</div>`, 
-                        className: 'bg-transparent border-none', 
-                        iconSize: [40, 40] 
-                    });
+                    const count = cluster.getChildCount();
+                    const markers = cluster.getAllChildMarkers();
+                    let coverImg = null;
+                    
+                    // 遍历簇内节点，寻找第一张带有照片的节点作为封面
+                    for (let i = 0; i < markers.length; i++) {
+                        if (markers[i].options.trace_photo) {
+                            coverImg = markers[i].options.trace_photo;
+                            break;
+                        }
+                    }
+
+                    if (coverImg) {
+                        return L.divIcon({
+                            html: `
+                            <div class="relative group cursor-pointer transform hover:scale-110 transition-transform duration-300 z-50">
+                                <img src="${coverImg}" class="w-[56px] h-[56px] rounded-[16px] object-cover border-[3px] border-white shadow-xl">
+                                <div class="absolute -top-2 -right-2 bg-slate-900/90 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/50 shadow-sm z-10 shadow-black/30">
+                                    +${count}
+                                </div>
+                            </div>`,
+                            className: 'bg-transparent border-none',
+                            iconSize: [56, 56],
+                            iconAnchor: [28, 28]
+                        });
+                    } else {
+                        return L.divIcon({
+                            html: `<div class="bg-slate-800/90 backdrop-blur-md text-white w-12 h-12 flex items-center justify-center rounded-full border-[3px] border-white shadow-xl font-bold font-sans transition-transform hover:scale-110">${count}</div>`,
+                            className: 'bg-transparent border-none',
+                            iconSize: [48, 48],
+                            iconAnchor: [24, 24]
+                        });
+                    }
                 }
+            });
+
+            // 🚨 核心修复 3：事件拦截器，彻底解决“母体鬼影”重叠问题
+            markerClusterGroup.on('spiderfied', function(e) {
+                // 散开时，彻底物理隐藏母体
+                if (e.cluster._icon) e.cluster._icon.style.display = 'none'; 
+            });
+            markerClusterGroup.on('unspiderfied', function(e) {
+                // 收拢时，恢复显示母体
+                if (e.cluster._icon) e.cluster._icon.style.display = 'block'; 
             });
 
             timelineNodesData.forEach(node => {
@@ -1063,7 +1243,8 @@
                             html: `<div class="relative group cursor-pointer transform hover:scale-110 transition-transform duration-300 z-50"><img src="${imgUrl}" class="w-[52px] h-[52px] rounded-[16px] object-cover border-[3px] border-white shadow-xl"></div>`,
                             iconSize: [52, 52], iconAnchor: [26, 26]
                         });
-                        const marker = L.marker([lat, lon], { icon: customIcon });
+                        // 🚨核心：将图片 URL 注入 Marker 的 options 中，供父级簇读取
+                        const marker = L.marker([lat, lon], { icon: customIcon, trace_photo: imgUrl });
                         marker.on('click', () => openCityDetailDrawer(node.city));
                         markerClusterGroup.addLayer(marker);
                     } else {
@@ -1097,6 +1278,7 @@
             setTimeout(() => document.getElementById('feedback-modal').classList.add('hidden'), 300);
         }
         async function submitFeedback() {
+            if (isGuestMode) { triggerToast("🔒 请先契入漫游舱，再发射意见回音"); document.getElementById('auth-overlay').classList.remove('hidden'); return; }
             const currentCode = localStorage.getItem('trace_user_code') || '匿名漫游者';
             const type = document.getElementById('fb-type').value;
             const content = document.getElementById('fb-content').value.trim();
@@ -1163,10 +1345,12 @@
                 }
                 html += `
                 <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-6 relative group">
-                    <div class="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2 z-10">
+                    
+                    <div class="absolute right-4 top-4 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex gap-2 z-10">
                         <button onclick="editNode(${node.node_id})" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-full text-xs shadow-sm" title="修改记录">✏️</button>
                         <button onclick="deleteNode(${node.node_id})" class="p-2 bg-red-50 hover:bg-red-100 text-red-500 rounded-full text-xs shadow-sm" title="擦除记录">🗑️</button>
                     </div>
+
                     <div class="flex justify-between items-start mb-3 pr-16">
                         <h4 class="text-lg font-serif-sc text-slate-800">${node.location_name || node.city}</h4>
                         <span class="text-[10px] text-slate-400 font-sans tracking-widest bg-slate-50 px-3 py-1 rounded-full">${node.visit_time || '全天'}</span>
@@ -1190,20 +1374,33 @@
                 if (node.photo_urls && node.photo_urls.length > 0 && node.photo_urls[0] !== "") {
                     photoHtml = `<div class="flex gap-2 overflow-x-auto mt-4 pb-2 scrollbar-hide">`;
                     node.photo_urls.forEach((url, idx) => {
-                        photoHtml += `<img src="${url}" onclick="openNodeGallery(${node.node_id}, ${idx})" class="h-16 w-16 object-cover rounded-lg shadow-sm border border-slate-200 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">`;
+                        // 🚀 新增 event.stopPropagation() 防止点击照片时弹出侧滑面板
+                        photoHtml += `<img src="${url}" onclick="event.stopPropagation(); openNodeGallery(${node.node_id}, ${idx})" class="h-16 w-16 md:h-20 md:w-20 object-cover rounded-xl shadow-sm border border-slate-200 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">`;
                     });
                     photoHtml += `</div>`;
                 }
+                
                 container.innerHTML += `
-                <div class="relative flex items-start mb-16 w-full group">
-                    <div class="hidden md:block w-[22%] text-right pr-12 pt-3">
-                        <h3 class="text-[1.5rem] font-serif-sc font-normal text-slate-800 tracking-wide">${node.visit_date.replace(/-/g, '.')}</h3>
-                        <p class="text-[10px] text-slate-400 mt-1 tracking-widest">${node.city}</p>
+                <div class="relative flex items-start mb-12 md:mb-16 w-full group">
+                    <div class="block w-[28%] md:w-[22%] text-right pr-6 md:pr-12 pt-1 md:pt-3 flex-shrink-0">
+                        <h3 class="text-[13px] md:text-[1.5rem] font-serif-sc font-bold md:font-normal text-slate-700 md:text-slate-800 tracking-wide">${node.visit_date.replace(/-/g, '.')}</h3>
+                        <p class="text-[9px] md:text-[10px] text-slate-400 mt-1 tracking-widest">${node.visit_time || ''}<br class="md:hidden">${node.city}</p>
                     </div>
-                    <div class="absolute left-8 md:left-[22%] w-2.5 h-2.5 rounded-full bg-white border-2 border-slate-400 transform md:-translate-x-[50%] -translate-x-[4px] mt-5 z-10 shadow-sm group-hover:bg-slate-400 transition-colors"></div>
-                    <div class="w-full pl-16 md:pl-12 md:w-[78%]">
-                        <div class="glass-panel p-6 rounded-3xl">
-                            <h4 class="text-lg font-serif-sc text-slate-800">${node.location_name || node.city}</h4>
+                    <div class="absolute left-[28%] md:left-[22%] w-2.5 h-2.5 rounded-full bg-white border-2 border-slate-400 transform md:-translate-x-[50%] -translate-x-[4px] mt-2 md:mt-5 z-10 shadow-sm group-hover:bg-slate-400 transition-colors"></div>
+                    <div class="w-[72%] md:w-[78%] pl-6 md:pl-12">
+                        
+                        <div class="glass-panel p-5 md:p-6 rounded-3xl relative group/card cursor-pointer hover:bg-white/60 transition-colors" onclick="openCityDetailDrawer('${node.city}')">
+                            
+                            <div class="absolute right-4 top-4 opacity-100 md:opacity-0 md:group-hover/card:opacity-100 transition-opacity flex gap-2 z-10">
+                                <button onclick="event.stopPropagation(); editNode(${node.node_id})" class="p-2 bg-white/80 hover:bg-slate-100 rounded-full text-xs shadow-sm backdrop-blur-md border border-slate-100" title="修改记录">✏️</button>
+                                <button onclick="event.stopPropagation(); deleteNode(${node.node_id})" class="p-2 bg-white/80 hover:bg-red-50 text-red-500 rounded-full text-xs shadow-sm backdrop-blur-md border border-slate-100" title="擦除记录">🗑️</button>
+                            </div>
+
+                            <h4 class="text-lg font-serif-sc text-slate-800 pr-16">${node.location_name || node.city}</h4>
+                            <div class="text-[10px] text-slate-400 font-sans tracking-widest mt-1 mb-3 space-x-2">
+                                ${node.companion ? `<span>羁绊: ${node.companion}</span>` : ''}
+                                ${node.expense ? `<span>开销: ¥${node.expense}</span>` : ''}
+                            </div>
                             <p class="text-sm text-slate-500 mt-2 font-serif-sc">${node.diary_text || '没有留下只言片语，或许此时无声胜有声...'}</p>
                             ${photoHtml}
                         </div>
@@ -1247,15 +1444,20 @@
                         cityData[n.city].cover = n.photo_urls[0];
                     }
                 });
-                html = `<div class="grid grid-cols-2 md:grid-cols-4 gap-4">`;
+                
+                // 🚀 重构为垂直居中卡片网格
+                html = `<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-5">`;
                 for(let c in cityData) {
-                    let imgHtml = cityData[c].cover ? `<img src="${cityData[c].cover}" class="w-10 h-10 rounded-full object-cover border border-slate-200/50 shadow-sm flex-shrink-0">` : '';
+                    let imgHtml = cityData[c].cover ? 
+                        `<img src="${cityData[c].cover}" class="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-[3px] border-white shadow-md flex-shrink-0">` : 
+                        `<div class="w-16 h-16 md:w-20 md:h-20 rounded-full object-cover border-[3px] border-white shadow-md flex-shrink-0 bg-slate-100 flex items-center justify-center text-slate-300 text-2xl">📍</div>`;
+                    
                     html += `
-                    <div onclick="openCityDetailDrawer('${c}')" class="p-4 border border-slate-100 rounded-2xl cursor-pointer hover:shadow-md bg-white/50 transition-all flex items-center justify-center gap-3">
+                    <div onclick="openCityDetailDrawer('${c}')" class="p-6 border border-slate-100 rounded-[2rem] cursor-pointer hover:shadow-lg bg-white/60 transition-all flex flex-col items-center justify-center gap-3">
                         ${imgHtml}
-                        <div class="${imgHtml ? 'text-left' : 'text-center'}">
-                            <h4 class="text-slate-800 font-medium">${c}</h4>
-                            <p class="text-[10px] text-slate-400 mt-1">${cityData[c].count} 条记录</p>
+                        <div class="text-center mt-1">
+                            <h4 class="text-slate-800 font-serif-sc text-lg tracking-widest">${c}</h4>
+                            <p class="text-[10px] text-slate-400 mt-1.5 tracking-widest">${cityData[c].count} 条记录</p>
                         </div>
                     </div>`;
                 }
@@ -1264,12 +1466,18 @@
                 html = `<div class="space-y-4">`;
                 timelineNodesData.forEach(n => {
                     html += `
-                    <div class="glass-panel p-5 flex justify-between items-center hover:bg-white/80 transition-all cursor-pointer" onclick="openCityDetailDrawer('${n.city}')">
-                        <div>
+                    <div class="glass-panel p-4 flex justify-between items-center hover:bg-white/80 transition-all group">
+                        
+                        <div class="cursor-pointer flex-1 pr-4" onclick="openCityDetailDrawer('${n.city}')">
                             <h4 class="text-slate-800 font-serif-sc text-lg">${n.location_name || n.city}</h4>
                             <p class="text-xs text-slate-400 mt-1 tracking-widest">${n.visit_date.replace(/-/g, '.')} · ${n.companion || '独自漫游'}</p>
                         </div>
-                        <div class="text-xl opacity-40 hover:opacity-80 transition-opacity">📝</div>
+                        
+                        <div class="flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                            <button onclick="editNode(${n.node_id})" class="p-2.5 bg-slate-100 hover:bg-slate-200 rounded-full text-sm shadow-sm" title="修改">✏️</button>
+                            <button onclick="deleteNode(${n.node_id})" class="p-2.5 bg-red-50 hover:bg-red-100 text-red-500 rounded-full text-sm shadow-sm" title="擦除">🗑️</button>
+                        </div>
+
                     </div>`;
                 });
                 html += `</div>`;
@@ -1336,10 +1544,20 @@
         }
         function goBack() { if (historyStack.length > 1) { historyStack.pop(); switchView(historyStack.pop()); } }
 
+        // 🚨 修复 1：补全了 function
         function toggleSubView(type) {
             document.getElementById('sub-view-map').classList.toggle('hidden', type !== 'map');
             document.getElementById('sub-view-timeline').classList.toggle('hidden', type !== 'timeline');
             
+            const titleEl = document.getElementById('dashboard-mobile-title');
+            if (titleEl) {
+                if (window.innerWidth < 768) {
+                    titleEl.innerText = type === 'map' ? '漫游记忆大盘' : '时空轨迹线';
+                } else {
+                    titleEl.innerText = '漫游记忆大盘';
+                }
+            }
+
             const btnMap = document.getElementById('btn-map');
             const btnTimeline = document.getElementById('btn-timeline');
             const activeClass = "px-6 py-2.5 text-[11px] font-medium rounded-full bg-slate-800 text-white shadow-md tracking-widest transition-all";
@@ -1348,7 +1566,6 @@
             if(type === 'map') {
                 btnMap.className = activeClass; 
                 btnTimeline.className = inactiveClass;
-                // 【核心修复】摒弃旧的 ECharts，强制唤醒 Leaflet 重新计算尺寸，根除地图无法显示的问题
                 setTimeout(() => { if(leafletMap) leafletMap.invalidateSize(); }, 150); 
             } else {
                 btnTimeline.className = activeClass; 
@@ -1358,11 +1575,73 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             initDropdowns(); 
-            if(checkUserLogin()) loadDataFromDatabase(); 
+            if(checkUserLogin()) loadDataFromDatabase();
+            initMobileKeyboardFix(); 
         });
-    </script>
-    
-    <script>
+
+        // ==========================================
+        // V1.3 移动端高定抽屉、表单与键盘防穿模引擎
+        // ==========================================
+        function openMobileRecordSheet() {
+            resetForm();
+            if (window.innerWidth < 768) {
+                const sheet = document.getElementById('record-view');
+                sheet.classList.remove('hidden');
+                requestAnimationFrame(() => sheet.classList.remove('translate-y-full'));
+                // 视觉补偿：给大盘稍微向上推，露出键盘热区
+                if(leafletMap) leafletMap.panBy([0, 100], {animate: true});
+            } else {
+                switchView('record-view');
+            }
+        }
+
+        function closeMobileRecordSheet() {
+            if (window.innerWidth < 768) {
+                const sheet = document.getElementById('record-view');
+                sheet.classList.add('translate-y-full');
+                setTimeout(() => sheet.classList.add('hidden'), 500);
+            } else {
+                goBack();
+            }
+        }
+
+        // 重新接管全局的 openRecordView
+        function openRecordView() { openMobileRecordSheet(); }
+
+        // 🚨 修复 2：补全了注释双斜杠
+        // 🚀 全屏沉浸式面板动画控制（不再需要侧滑遮罩）
+        function openVaultDrawer() {
+            if (window.innerWidth < 768) {
+                const drawer = document.getElementById('vault-view');
+                drawer.classList.remove('hidden');
+                requestAnimationFrame(() => drawer.classList.remove('translate-y-full'));
+                
+                let mask = document.getElementById('mobile-drawer-mask');
+                if(mask) mask.remove();
+            } else {
+                switchView('vault-view');
+            }
+        }
+
+        function closeVaultDrawer() {
+            if (window.innerWidth < 768) {
+                const drawer = document.getElementById('vault-view');
+                drawer.classList.add('translate-y-full');
+                setTimeout(() => drawer.classList.add('hidden'), 500);
+            }
+        }
+
+        // 软键盘雷达：一旦唤起键盘，物理隐藏导航胶囊防穿模
+        function initMobileKeyboardFix() {
+            const inputs = document.querySelectorAll('#record-view input, #record-view textarea, #record-view select');
+            const nav = document.getElementById('mobile-capsule-nav');
+            if(!nav) return;
+            inputs.forEach(input => {
+                input.addEventListener('focus', () => nav.classList.add('opacity-0', 'pointer-events-none', 'translate-y-full'));
+                input.addEventListener('blur', () => nav.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-full'));
+            });
+        }
+    </script> <script>
         window.difyChatbotConfig = {
             token: 'MJTTqRDx63CBD1L8',
             inputs: {},
