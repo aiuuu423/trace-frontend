@@ -23,7 +23,7 @@
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js" defer></script>
     
     <style>
-        /* 深度定制，完美融入玻璃态 UI，像素级对齐原生输入框高度 */
+        /* 深度定制，完美融入玻璃态 UI */
         .ts-wrapper .ts-control { 
             background-color: rgba(255, 255, 255, 0.7) !important; 
             border: 1px solid white !important; 
@@ -40,7 +40,8 @@
         }
         .ts-wrapper.single .ts-control .item { margin: 0 !important; padding: 0 !important; max-width: 100% !important; display: block; transform: translateY(1px); } 
         .ts-wrapper .ts-control input { margin: 0 !important; padding: 0 !important; font-size: 0.875rem !important; height: 100% !important; background: transparent !important; }
-        /* 🚀 强制隐藏引擎：彻底解决 Tailwind PC 端前缀覆盖 hidden 的问题 */
+
+        /* 强制隐藏引擎：解决 PC 端排版冲突 */
         .view-section.hidden { display: none !important; }
 
         body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif; overflow-x: hidden; background-color: #eef2f6; color: #334155; margin: 0; }
@@ -762,6 +763,7 @@
                                 triggerToast("🚀 丝滑归仓！您的第一条记忆已完美自动铭刻成功");
                                 resetForm();
                                 pendingTraceData = null; 
+                                isDataLoaded = false; // 🚀 标记缓存失效
                                 loadDataFromDatabase();  
                             }
                         });
@@ -786,6 +788,8 @@
             });
         }
 
+        let isDataLoaded = false; // 🚀 V1.4 性能优化：内存级数据缓存阀门
+
         async function loadDataFromDatabase() {
             const currentCode = checkUserLogin();
             if(!currentCode) return;
@@ -806,6 +810,8 @@
                     renderLeafletMap(); 
                     updateVaultStats(); 
                     renderVaultTabContent();
+                    
+                    isDataLoaded = true; // 🚀 数据拉取成功，标记内存已满，下次秒切！
                 }
             } catch (e) { 
                 console.log(e); 
@@ -894,6 +900,7 @@
                 if (res.ok) {
                     triggerToast(editingNodeId ? "✨ 行迹坐标已重新校准" : "✨ 新的记忆已铭刻于星空");
                     resetForm();
+                    isDataLoaded = false; // 🚀 标记缓存失效，强制重新拉取
                     setTimeout(() => { switchView('dashboard-view'); loadDataFromDatabase(); }, 1200);
                 } else {
                     triggerToast("铭刻失败，星区信号微弱");
@@ -905,6 +912,7 @@
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('opacity-70', 'cursor-not-allowed');
             }
+                
         }
 
         async function deleteNode(nodeId) {
@@ -919,6 +927,7 @@
                     if (res.ok) {
                         triggerToast("✨ 一段行迹已化作星尘散去");
                         closeDetailModal();
+                        isDataLoaded = false; // 🚀 标记缓存失效
                         loadDataFromDatabase();
                     }
                 } catch(e) { triggerToast("擦除失败，星空引力过大"); }
@@ -1581,7 +1590,16 @@
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             document.getElementById(viewId).classList.remove('hidden');
             document.getElementById('global-back-btn').classList.toggle('hidden', viewId === 'landing-view');
-            if (viewId === 'dashboard-view' || viewId === 'vault-view') loadDataFromDatabase(); 
+            
+            // 🚀 V1.4 缓存分发：如果在内存中，绝不重复拉取数据，直接 0ms 唤醒！
+            if (viewId === 'dashboard-view' || viewId === 'vault-view') {
+                if (!isDataLoaded) {
+                    loadDataFromDatabase(); 
+                } else {
+                    // 数据都在内存里，只需唤醒 Leaflet 渲染视口防闪烁即可
+                    if(leafletMap) setTimeout(() => leafletMap.invalidateSize(), 150);
+                }
+            }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         function goBack() { if (historyStack.length > 1) { historyStack.pop(); switchView(historyStack.pop()); } }
